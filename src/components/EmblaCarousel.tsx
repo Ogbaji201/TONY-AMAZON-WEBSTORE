@@ -86,3 +86,6 @@ export default function EmblaCarousel({ slides }: EmblaCarouselProps) {
     </div>
   );
 }
+
+
+// src/components/EmblaCarousel.tsx
