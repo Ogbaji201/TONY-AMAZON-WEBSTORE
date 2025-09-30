@@ -1,4 +1,3 @@
-
 // src/app/checkout/page.tsx
 'use client';
 
@@ -219,13 +218,21 @@ export default function CheckoutPage() {
                     </div>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => setCurrentStep(2)}
-                    className="w-full bg-blue-600 text-white py-4 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-                  >
-                    Continue to Payment
-                  </button>
+                  <div className="flex space-x-4">
+                    <Link
+                      href="/cart"
+                      className="flex-1 border border-gray-300 text-gray-700 py-4 px-6 rounded-lg font-semibold hover:bg-gray-50 transition-colors text-center"
+                    >
+                      Back to Cart
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => setCurrentStep(2)}
+                      className="flex-1 bg-blue-600 text-white py-4 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+                    >
+                      Continue to Payment
+                    </button>
+                  </div>
                 </form>
               </div>
             )}

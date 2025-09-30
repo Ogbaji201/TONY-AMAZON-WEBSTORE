@@ -39,3 +39,23 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Next.js / Node
+node_modules/
+.next/
+.out/
+.turbo/
+dist/
+coverage/
+pnpm-lock.yaml
+*.log
+
+# Env & local files
+.env*
+!.env.example
+.next-env.d.ts
+
+# OS
+.DS_Store
+Thumbs.db
+.env.local

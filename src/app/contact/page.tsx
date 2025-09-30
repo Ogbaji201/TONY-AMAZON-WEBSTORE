@@ -62,7 +62,7 @@ export default function ContactPage() {
                 <div>
                   <h3 className="font-semibold text-gray-800">Email</h3>
                   <p className="text-gray-600">anthonyonyejowo082@gmail.com</p>
-                  <p className="text-gray-600">anthonyonyejowo082@gmail.com</p>
+                  
                 </div>
               </div>
 
@@ -72,7 +72,6 @@ export default function ContactPage() {
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-800">Phone</h3>
-                  <p className="text-gray-600">+234 706 668 4785</p>
                   <p className="text-gray-600">+234 706 668 4785</p>
                 </div>
               </div>

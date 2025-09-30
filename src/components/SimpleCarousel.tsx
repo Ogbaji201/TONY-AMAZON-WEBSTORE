@@ -90,7 +90,6 @@
 
 // // src/components/EmblaCarousel.tsx
 
-// components/SimpleCarousel.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -107,10 +106,10 @@ interface Slide {
 }
 
 interface SimpleCarouselProps {
-  slides: Slide[];
+  slides?: Slide[];
 }
 
-export const dummySlides = [
+export const dummySlides: Slide[] = [
   {
     src: "/p1.jpg",
     alt: "Pharmaceuticals 1",
@@ -163,7 +162,7 @@ export default function SimpleCarousel({ slides = dummySlides }: SimpleCarouselP
   useEffect(() => {
     const interval = setInterval(nextSlide, 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, [slides.length]);
 
   return (
     <div className="relative w-full h-[500px] md:h-[600px] overflow-hidden">
@@ -177,13 +176,14 @@ export default function SimpleCarousel({ slides = dummySlides }: SimpleCarouselP
         >
           <div className="relative w-full h-full">
             <Image
-              src={slide.src}
+              src={slide.src || "/placeholder.jpg"}   // ✅ fallback if missing
               alt={slide.alt}
               fill
+              sizes="100vw"
               className="object-cover"
               priority={index === 0}
             />
-            
+
             {/* Dark overlay */}
             <div className="absolute inset-0 bg-black bg-opacity-40"></div>
 
