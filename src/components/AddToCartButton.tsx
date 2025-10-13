@@ -1,50 +1,37 @@
-
-// src/components/AddToCartButton.tsx
 'use client';
 
+import { useState } from 'react';
+import { ShoppingCart, Check } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
-import { ShoppingCart } from 'lucide-react';
 
 type Props = {
-  id: number | string;
+  id: number;
   name: string;
   price: number;
   image?: string | null;
   className?: string;
-  children?: React.ReactNode;
 };
 
-export default function AddToCartButton({
-  id,
-  name,
-  price,
-  image,
-  className = '',
-  children,
-}: Props) {
-  const { addToCart } = useCart();
+export default function AddToCart({ id, name, price, image, className }: Props) {
+  const { addToCart } = useCart(); // your CartContext should expose this
+  const [added, setAdded] = useState(false);
 
-  function handleClick() {
-    addToCart({
-      id,
-      name,
-      price,
-      image: image || '',
-      quantity: 1,
-    });
-  }
+  const handleAdd = () => {
+    addToCart({ id, name, price, image: image ?? undefined, quantity: 1 });
+    setAdded(true);
+    setTimeout(() => setAdded(false), 1200);
+  };
 
   return (
     <button
-      type="button"
-      onClick={handleClick}
+      onClick={handleAdd}
       className={
-        className ||
+        className ??
         'w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition duration-300 transform hover:scale-105 flex items-center justify-center'
       }
     >
-      <ShoppingCart className="w-4 h-4 mr-2" />
-      {children ?? 'Add to Cart'}
+      {added ? <Check className="w-4 h-4 mr-2" /> : <ShoppingCart className="w-4 h-4 mr-2" />}
+      {added ? 'Added' : 'Add to Cart'}
     </button>
   );
 }

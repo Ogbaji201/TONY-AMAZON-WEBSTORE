@@ -175,182 +175,143 @@
 //   );
 // }
 
+// src/components/ProductGrid.tsx
 'use client';
 
-import Link from 'next/link';
-import { Heart, ShoppingCart, Star } from 'lucide-react';
-import { useCart } from '@/context/CartContext';  // ⬅️ use cart
+import Image from "next/image";
+import { ShoppingCart, Star, Heart } from "lucide-react";
+import { useCart } from "@/context/CartContext";
 
-const RAW_BASE = process.env.NEXT_PUBLIC_STRAPI_URL ?? 'http://localhost:1337';
-const STRAPI = RAW_BASE.replace(/\/$/, '');
+type RawProduct = any; // Strapi raw item (v4/v5)
 
-type AnyRec = Record<string, any>;
+function pick<T>(v: T | undefined | null, f: T): T { return (v ?? f); }
 
-function prefix(url?: string | null) {
-  if (!url) return '';
-  return url.startsWith('http') ? url : `${STRAPI}${url}`;
+function getAttr(p: RawProduct) {
+  // v4: p.attributes, v5: fields at top-level
+  return p?.attributes ? p.attributes : p || {};
 }
 
-function slugify(str = '') {
-  return str
-    .toString()
-    .toLowerCase()
-    .trim()
-    .replace(/\s+/g, '-')
-    .replace(/[^\w\-]+/g, '')
-    .replace(/\-\-+/g, '-');
-}
+function getImageUrl(p: RawProduct): string | null {
+  const a = getAttr(p);
+  const img = a.Image_Upload;
+  let images: any[] = [];
 
-/** Handle both Strapi v4 and v5 shapes */
-function attrs(item: AnyRec): AnyRec {
-  return item?.attributes ? item.attributes : item ?? {};
-}
+  if (Array.isArray(img)) images = img;
+  else if (img?.data) images = Array.isArray(img.data) ? img.data : [img.data];
 
-/** Get first image url from Image_Upload (array) OR Image_Upload.data (relation) */
-function firstImageUrl(a: AnyRec): string | null {
-  const field = a.Image_Upload;
-
-  // v5: array of files
-  if (Array.isArray(field) && field.length > 0) {
-    const u = field[0]?.attributes?.url ?? field[0]?.url;
-    return u ? prefix(u) : null;
-  }
-
-  // v4: { data: [...] }
-  if (field?.data) {
-    const arr = Array.isArray(field.data) ? field.data : [field.data];
-    const u = arr[0]?.attributes?.url ?? arr[0]?.url;
-    return u ? prefix(u) : null;
-  }
-
-  return null;
-}
-
-/** Extract a readable category name, regardless of nesting/casing */
-function categoryName(a: AnyRec): string {
-  const cat =
-    a.category?.data?.attributes ??
-    a.category?.attributes ??
-    a.category ??
+  const url =
+    images?.[0]?.attributes?.url ??
+    images?.[0]?.url ??
     null;
 
-  if (!cat) return 'Uncategorized';
-  return cat.Name ?? cat.name ?? cat.title ?? 'Uncategorized';
+  const base = (process.env.NEXT_PUBLIC_STRAPI_URL ?? "http://localhost:1337").replace(/\/$/, "");
+  return url ? (url.startsWith("http") ? url : `${base}${url}`) : null;
 }
 
-export default function ProductGrid({ products = [] as AnyRec[] }) {
-  const { addToCart } = useCart(); // ⬅️ grab addToCart
+function getCategoryName(p: RawProduct): string {
+  const a = getAttr(p);
+  const cat =
+    a?.category?.data?.attributes ??
+    a?.category?.attributes ??
+    a?.category;
+
+  const name = cat?.Name ?? cat?.name ?? cat?.title ?? "Uncategorized";
+  return name;
+}
+
+function getPriceNumber(p: RawProduct): number {
+  const a = getAttr(p);
+  const raw = a?.Price;
+  if (typeof raw === "number") return raw;
+  if (typeof raw === "string") {
+    const n = parseFloat(raw.replace(/[^0-9.]/g, ""));
+    return Number.isFinite(n) ? n : 0;
+  }
+  return 0;
+}
+
+export default function ProductGrid({ products }: { products: RawProduct[] }) {
+  const { addToCart } = useCart();
+
+  const cartBtnClass =
+    "group inline-flex items-center justify-center w-full rounded-xl " +
+    "bg-blue-600 text-white py-3 font-semibold shadow-sm " +
+    "hover:bg-blue-700 active:scale-[0.99] " +
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 " +
+    "transition";
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-      {products.map((item) => {
-        const a = attrs(item);
-
-        const id = item.id ?? a.id;
-        const imageUrl = firstImageUrl(a);
-        const catName = categoryName(a);
-
-        const title: string = a.Panadol ?? a.title ?? 'Untitled';
-        const desc: string =
-          a.Product_description ??
-          a.description ??
-          'No description available.';
-        const featured: boolean = !!a.featured;
-        const priceRaw = a.Price ?? 0;
-        const priceNum =
-          typeof priceRaw === 'string'
-            ? parseInt(priceRaw, 10) || 0
-            : Number(priceRaw) || 0;
-
-        const amazonUrl: string = a.amazon_url || '#';
-
-        function handleAddToCart() {
-          // Most CartContext implementations expect something like this:
-          // { id, name, price, image, quantity }
-          addToCart({
-            id,
-            name: title,
-            price: priceNum,
-            image: imageUrl || '',
-            quantity: 1,
-          });
-        }
+      {products.map((p) => {
+        const a = getAttr(p);
+        const id = pick(p?.id ?? a?.id, Math.random());
+        const name = pick(a?.Panadol, "Unnamed product");
+        const img = getImageUrl(p);
+        const price = getPriceNumber(p);
+        const categoryName = getCategoryName(p);
+        const featured = !!a?.featured;
 
         return (
-          <div
-            key={id}
-            className="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition duration-300 group"
-          >
-            <div className="relative overflow-hidden">
-              {imageUrl ? (
-                <img
-                  src={imageUrl}
-                  alt={title}
-                  className="w-full h-64 object-cover group-hover:scale-105 transition duration-300"
+          <div key={id} className="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition group">
+            {/* Image */}
+            <div className="relative h-64 w-full overflow-hidden">
+              {img ? (
+                // If you're using next/image with remotePatterns configured:
+                <Image
+                  src={img}
+                  alt={name}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 33vw"
+                  className="object-contain group-hover:scale-105 transition"
                 />
               ) : (
-                <div className="w-full h-64 bg-gray-200 flex items-center justify-center">
-                  <span className="text-gray-500">No image</span>
+                <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400">
+                  No image
                 </div>
               )}
-
               {featured && (
-                <div className="absolute top-4 left-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                  Featured
-                </div>
+                <span className="absolute top-4 left-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-semibold">Featured</span>
               )}
-
-              <div className="absolute top-4 right-4">
-                <button className="bg-white rounded-full p-2 shadow-md hover:bg-red-500 hover:text-white transition duration-300">
-                  <Heart className="w-4 h-4" />
-                </button>
-              </div>
+              <button className="absolute top-4 right-4 bg-white rounded-full p-2 shadow hover:text-red-500 transition">
+                <Heart className="w-4 h-4" />
+              </button>
             </div>
 
+            {/* Body */}
             <div className="p-6">
               <div className="flex items-center mb-2">
                 <div className="flex text-yellow-400">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-4 h-4 fill-current" />
-                  ))}
+                  {[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4 fill-current" />)}
                 </div>
                 <span className="text-sm text-gray-600 ml-2">(59 reviews)</span>
               </div>
 
-              <h3 className="text-xl font-semibold text-gray-800 mb-2 line-clamp-1">
-                {title}
-              </h3>
-
-              <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                {desc}
-              </p>
+              <h3 className="text-xl font-semibold text-gray-800 mb-2 line-clamp-1">{name}</h3>
+              <p className="text-gray-600 text-sm mb-4 line-clamp-2">{a?.Product_description ?? "No description available."}</p>
 
               <div className="flex items-center justify-between mb-4">
-                <span className="text-2xl font-bold text-green-600">
-                  ₦{priceNum.toLocaleString()}
-                </span>
-                <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                  {catName}
-                </span>
+                <span className="text-2xl font-bold text-green-600">₦{price.toLocaleString()}</span>
+                <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">{categoryName}</span>
               </div>
 
-              <div className="space-y-2">
-                <a
-                  href={amazonUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block w-full bg-yellow-400 hover:bg-yellow-500 text-center text-gray-900 font-semibold py-3 rounded-lg transition duration-300 transform hover:scale-105"
-                >
-                  Buy on Amazon
-                </a>
+              <div className="space-y-3">
+                {a?.amazon_url && (
+                  <a
+                    href={a.amazon_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block w-full bg-yellow-400 hover:bg-yellow-500 text-center text-gray-900 font-semibold py-3 rounded-lg transition"
+                  >
+                    Buy on Amazon
+                  </a>
+                )}
 
-                {/* ⬇️ call addToCart on click */}
+                {/* Add to cart – uses CartContext */}
                 <button
-                  type="button"
-                  onClick={handleAddToCart}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition duration-300 transform hover:scale-105 flex items-center justify-center"
+                  onClick={() => addToCart({ id, name, price, image: img })}
+                  className={cartBtnClass}
                 >
-                  <ShoppingCart className="w-4 h-4 mr-2" />
+                  <ShoppingCart className="w-4 h-4 mr-2 transition-transform group-hover:-translate-y-0.5" />
                   Add to Cart
                 </button>
               </div>

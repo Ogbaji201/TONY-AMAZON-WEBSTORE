@@ -59,3 +59,7 @@ pnpm-lock.yaml
 .DS_Store
 Thumbs.db
 .env.local
+
+public/.tmp/
+*.db
+
