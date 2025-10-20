@@ -80,7 +80,7 @@ export default function ProductCard({ product }: ProductCardProps) {
               <Star key={i} className="w-4 h-4 fill-current" />
             ))}
           </div>
-          <span className="text-sm text-gray-600 ml-2">(59 reviews)</span>
+          <span className="text-sm text-gray-600 ml-2">(online reviews)</span>
         </div>
 
         <h3 className="text-xl font-semibold text-gray-800 mb-2 line-clamp-1">
