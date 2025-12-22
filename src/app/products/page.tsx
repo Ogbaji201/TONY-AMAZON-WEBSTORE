@@ -211,7 +211,7 @@
 //   );
 // }
 
-import Navigation from "@/components/Navigation";
+// import Navigation from "@/components/Navigation";
 import { ShoppingBag, Star, Heart } from "lucide-react";
 import AddToCartButton from "@/components/AddToCartButton";
 import QuickView from "@/components/QuickView";

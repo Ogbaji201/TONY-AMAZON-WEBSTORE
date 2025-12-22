@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import { CreditCard, Truck, Shield, ArrowLeft, MapPin } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
-import Navigation from '@/components/Navigation';
+// import Navigation from '@/components/Navigation';
 import Link from 'next/link';
 
 export default function CheckoutPage() {
@@ -29,7 +29,7 @@ export default function CheckoutPage() {
   const total = getCartTotal();
   const itemCount = getCartCount();
   const shipping = total > 25000 ? 0 : 1500; // Free shipping over ₦25,000
-  const tax = total * 0.075; // 7.5% tax
+  const tax = total * 0; // 7.5% tax
   const finalTotal = total + shipping + tax;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
