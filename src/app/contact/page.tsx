@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import { Mail, Phone, MapPin, Clock, Send } from 'lucide-react';
-import Navigation from '@/components/Navigation';
+// import Navigation from '@/components/Navigation';
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -30,7 +30,7 @@ export default function ContactPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navigation categories={[]} />
+      {/* <Navigation categories={[]} /> */}
       
       <div className="container mx-auto px-4 py-12">
         {/* Header */}
@@ -62,6 +62,7 @@ export default function ContactPage() {
                 <div>
                   <h3 className="font-semibold text-gray-800">Email</h3>
                   <p className="text-gray-600">anthonyonyejowo082@gmail.com</p>
+                  <p className="text-gray-600">health@cheryblisshealth.com</p>
                   
                 </div>
               </div>

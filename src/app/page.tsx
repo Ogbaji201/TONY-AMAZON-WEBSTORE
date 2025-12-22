@@ -510,7 +510,6 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Navigation from "@/components/Navigation";
-import Link from "next/link";
 import SimpleCarousel from "@/components/SimpleCarousel";
 import AddToCartButton from "@/components/AddToCartButton";
 
@@ -585,7 +584,7 @@ function normalize(items: any[]): NormalizedProduct[] {
       Product_description: a.Product_description,
       Price: a.Price,
       Image_Upload: images,
-      amazon_url: a.amazon_url,
+      amazon_url: external(a.amazon_url) ?? null, // ✅ normalize once
       featured: a.featured,
       category,
     } as NormalizedProduct;
@@ -836,7 +835,7 @@ export default async function Home() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navigation categories={categories} />
+      {/* <Navigation categories={categories} /> */}
 
       {/* Hero / Carousel from Strapi (with fallback) */}
       <section className="relative">
@@ -954,31 +953,11 @@ export default async function Home() {
             <div>
               <h4 className="font-semibold mb-4 text-lg">Customer Service</h4>
               <ul className="space-y-2 text-gray-400">
-                <li>
-                  <a href="#" className="hover:text-white transition">
-                    FAQ
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-white transition">
-                    Shipping Info
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-white transition">
-                    Returns
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-white transition">
-                    Privacy Policy
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-white transition">
-                    Terms of Service
-                  </a>
-                </li>
+                <li><a href="#" className="hover:text-white transition">FAQ</a></li>
+                <li><a href="#" className="hover:text-white transition">Shipping Info</a></li>
+                <li><a href="#" className="hover:text-white transition">Returns</a></li>
+                <li><a href="#" className="hover:text-white transition">Privacy Policy</a></li>
+                <li><a href="#" className="hover:text-white transition">Terms of Service</a></li>
               </ul>
             </div>
 

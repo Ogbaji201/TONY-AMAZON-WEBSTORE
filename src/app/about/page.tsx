@@ -3,7 +3,7 @@
 'use client';
 
 import { Users, Shield, Award, Truck, Heart, Target } from 'lucide-react';
-import Navigation from '@/components/Navigation';
+// import Navigation from '@/components/Navigation';
 
 export default function AboutPage() {
   const values = [
@@ -38,7 +38,7 @@ export default function AboutPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navigation categories={[]} />
+      {/* <Navigation categories={[]} /> */}
       
       {/* Hero Section */}
       <section className="bg-gradient-to-r from-blue-600 to-purple-700 text-white py-20">
