@@ -330,7 +330,7 @@ export default async function ProductsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navigation categories={categories} />
+      {/* <Navigation categories={categories} /> */}
 
       <div className="container mx-auto px-4 py-8">
         <div className="text-center mb-12">

@@ -349,7 +349,7 @@ export default async function Home() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navigation categories={categories} />
+      {/* <Navigation categories={categories} /> */}
 
       {/* Hero / Carousel from Strapi (with fallback) */}
       <section className="relative">
