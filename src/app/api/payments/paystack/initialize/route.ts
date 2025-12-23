@@ -1,16 +1,34 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+export const runtime = "nodejs";
+
 export async function POST(req: NextRequest) {
   try {
-    const { orderId } = await req.json();
+    const secretKey = process.env.PAYSTACK_SECRET_KEY;
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL;
 
-    if (!orderId) {
+    if (!secretKey) {
+      return NextResponse.json(
+        { error: "Missing PAYSTACK_SECRET_KEY in .env.local" },
+        { status: 500 }
+      );
+    }
+
+    if (!appUrl) {
+      return NextResponse.json(
+        { error: "Missing NEXT_PUBLIC_APP_URL in .env.local" },
+        { status: 500 }
+      );
+    }
+
+    const body = await req.json().catch(() => null);
+    if (!body?.orderId) {
       return NextResponse.json({ error: "Missing orderId" }, { status: 400 });
     }
 
     const order = await prisma.order.findUnique({
-      where: { id: orderId },
+      where: { id: body.orderId },
     });
 
     if (!order) {
@@ -21,39 +39,29 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Order already paid" }, { status: 400 });
     }
 
-    const secretKey = process.env.PAYSTACK_SECRET_KEY;
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL;
-
-    if (!secretKey || !appUrl) {
+    const amountKobo = Math.round(Number(order.totalAmount) * 100);
+    if (!Number.isFinite(amountKobo) || amountKobo <= 0) {
       return NextResponse.json(
-        { error: "Missing PAYSTACK_SECRET_KEY or NEXT_PUBLIC_APP_URL" },
-        { status: 500 }
+        { error: "Invalid order amount", totalAmount: order.totalAmount },
+        { status: 400 }
       );
     }
 
-    // Paystack expects amount in kobo
-    const amountKobo = Math.round(Number(order.totalAmount) * 100);
-
-    // A unique reference for this transaction
     const reference = `CB_${order.id}_${Date.now()}`;
-
-    // Optional: where Paystack redirects user after payment
-    const callback_url = `${appUrl}/checkout/success?orderId=${order.id}`;
+    const callback_url = `${appUrl.replace(/\/$/, "")}/checkout/success?orderId=${order.id}`;
 
     const payload = {
       email: order.customerEmail,
       amount: amountKobo,
-      currency: order.currency ?? "NGN",
+      currency: "NGN",
       reference,
       callback_url,
-      metadata: {
-        orderId: order.id,
-        customerName: order.customerName,
-        customerPhone: order.customerPhone,
-      },
+      metadata: { orderId: order.id },
     };
 
-    const res = await fetch("https://api.paystack.co/transaction/initialize", {
+    console.log("🟦 Paystack initialize payload:", payload);
+
+    const psRes = await fetch("https://api.paystack.co/transaction/initialize", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${secretKey}`,
@@ -62,16 +70,31 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify(payload),
     });
 
-    const json = await res.json();
+    const psText = await psRes.text();
+    let psJson: any;
+    try {
+      psJson = psText ? JSON.parse(psText) : null;
+    } catch {
+      psJson = { raw: psText };
+    }
 
-    if (!res.ok || !json?.status) {
+    console.log("🟨 Paystack response:", {
+      status: psRes.status,
+      body: psJson,
+    });
+
+    if (!psRes.ok || !psJson?.status || !psJson?.data?.authorization_url) {
       return NextResponse.json(
-        { error: "Paystack initialize failed", details: json },
+        {
+          error: "Paystack initialize failed",
+          paystackStatus: psRes.status,
+          paystackBody: psJson,
+        },
         { status: 500 }
       );
     }
 
-    // Save reference on your order
+    // Save reference for webhook matching
     await prisma.order.update({
       where: { id: order.id },
       data: {
@@ -82,14 +105,14 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json({
-      authorization_url: json.data.authorization_url,
-      access_code: json.data.access_code,
+      authorization_url: psJson.data.authorization_url,
+      access_code: psJson.data.access_code,
       reference,
     });
   } catch (err: any) {
-    console.error("Paystack initialize error:", err);
+    console.error("❌ Initialize route error:", err);
     return NextResponse.json(
-      { error: "Internal server error", details: err?.message ?? "Unknown" },
+      { error: "Internal server error", details: err?.message || "Unknown" },
       { status: 500 }
     );
   }

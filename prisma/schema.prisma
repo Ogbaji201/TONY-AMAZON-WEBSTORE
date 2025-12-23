@@ -4,22 +4,33 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
+
 model Order {
-  id          String   @id @default(cuid())
-  customerName String
-  customerEmail String
-  customerPhone String
+  id              String   @id @default(cuid())
+  customerName    String
+  customerEmail   String
+  customerPhone   String
   customerAddress String
-  totalAmount  Float
-  status      OrderStatus @default(PENDING)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  items       OrderItem[]
-  
+  totalAmount     Float
+
+  status          OrderStatus @default(PENDING)
+
+  // ✅ Payment tracking
+  paymentStatus    PaymentStatus @default(PENDING)
+  paymentProvider  String?       // e.g. "paystack"
+  paymentReference String? @unique
+  paidAt           DateTime?
+  currency         String @default("NGN")
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  items           OrderItem[]
+
   @@map("orders")
 }
 
@@ -31,8 +42,9 @@ model OrderItem {
   price     Float
   quantity  Int
   image     String?
+
   order     Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  
+
   @@map("order_items")
 }
 
@@ -42,4 +54,10 @@ enum OrderStatus {
   SHIPPED
   DELIVERED
   CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
 }
