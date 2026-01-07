@@ -63,3 +63,4 @@ Thumbs.db
 public/.tmp/
 *.db
 
+*.db.backup

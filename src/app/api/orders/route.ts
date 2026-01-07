@@ -1,6 +1,7 @@
 // app/api/orders/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { OrderStatus } from '@prisma/client';
 
 export async function POST(request: NextRequest) {
   try {
@@ -84,7 +85,7 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status');
     
     const orders = await prisma.order.findMany({
-      where: status ? { status } : {},
+      where: status ? { status: status as OrderStatus } : {},
       include: {
         items: true,
       },

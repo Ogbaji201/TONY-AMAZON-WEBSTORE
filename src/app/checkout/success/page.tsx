@@ -44,13 +44,110 @@
 //   );
 // }
 
+// "use client";
+
+// import { useEffect, useState } from "react";
+// import Link from "next/link";
+// import { useSearchParams } from "next/navigation";
+
+// export default function CheckoutSuccessPage() {
+//   const params = useSearchParams();
+//   const orderId = params.get("orderId") || "";
+//   const reference = params.get("reference") || ""; // Paystack sometimes sends ?reference=
+
+//   const [loading, setLoading] = useState(true);
+//   const [status, setStatus] = useState<"PAID" | "FAILED" | "UNKNOWN">("UNKNOWN");
+//   const [message, setMessage] = useState("");
+
+//   useEffect(() => {
+//     async function run() {
+//       try {
+//         const res = await fetch("/api/payments/paystack/verify", {
+//           method: "POST",
+//           headers: { "Content-Type": "application/json" },
+//           body: JSON.stringify({ orderId, reference }),
+//         });
+
+//         const json = await res.json();
+
+//         if (res.ok && json?.success) {
+//           setStatus("PAID");
+//           setMessage("Payment confirmed. Your order is now confirmed ✅");
+//         } else {
+//           setStatus("FAILED");
+//           setMessage(json?.error || "Payment not confirmed yet. If you were charged, please contact support.");
+//         }
+//       } catch (e) {
+//         setStatus("FAILED");
+//         setMessage("Could not verify payment. Please refresh this page.");
+//       } finally {
+//         setLoading(false);
+//       }
+//     }
+//     run();
+//   }, [orderId, reference]);
+
+//   return (
+//     <div className="min-h-screen bg-gray-50">
+//       <div className="container mx-auto px-4 py-16 max-w-2xl">
+//         <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
+//           <h1 className="text-2xl font-bold mb-2">
+//             {loading ? "Confirming payment..." : status === "PAID" ? "Payment Successful" : "Payment Pending/Failed"}
+//           </h1>
+
+//           <p className="text-gray-600 mb-6">{message}</p>
+
+//           {orderId && (
+//             <p className="text-sm text-gray-500 mb-8">
+//               <strong>Order ID:</strong> {orderId}
+//               {reference ? (
+//                 <>
+//                   <br />
+//                   <strong>Reference:</strong> {reference}
+//                 </>
+//               ) : null}
+//             </p>
+//           )}
+
+//           <div className="flex gap-3 justify-center">
+//             <Link
+//               href="/products"
+//               className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700"
+//             >
+//               Continue Shopping
+//             </Link>
+
+//             <Link
+//               href="/"
+//               className="border border-gray-300 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-50"
+//             >
+//               Home
+//             </Link>
+//           </div>
+
+//           {!loading && status !== "PAID" && (
+//             <button
+//               onClick={() => window.location.reload()}
+//               className="mt-6 text-blue-600 hover:underline"
+//             >
+//               Refresh verification
+//             </button>
+//           )}
+//         </div>
+//       </div>
+//     </div>
+//   );
+// }
+
+
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
-export default function CheckoutSuccessPage() {
+// Inner component that uses useSearchParams
+function CheckoutSuccessContent() {
   const params = useSearchParams();
   const orderId = params.get("orderId") || "";
   const reference = params.get("reference") || ""; // Paystack sometimes sends ?reference=
@@ -136,5 +233,21 @@ export default function CheckoutSuccessPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Main component with Suspense boundary
+export default function CheckoutSuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-2">Loading...</h1>
+          <p className="text-gray-600">Verifying your payment...</p>
+        </div>
+      </div>
+    }>
+      <CheckoutSuccessContent />
+    </Suspense>
   );
 }
