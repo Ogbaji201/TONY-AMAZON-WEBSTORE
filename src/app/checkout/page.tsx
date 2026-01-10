@@ -497,6 +497,7 @@ import { Shield, ArrowLeft, MapPin } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 // import Navigation from '@/components/Navigation';
 import Link from 'next/link';
+import { init } from 'next/dist/compiled/webpack/webpack';
 
 export default function CheckoutPage() {
   const { cartItems, getCartTotal, getCartCount, clearCart } = useCart();
@@ -585,12 +586,31 @@ export default function CheckoutPage() {
       const initRes = await fetch('/api/payments/paystack/initialize', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderId }),
+        body: JSON.stringify({
+          email: customerData.email,
+          amountInKobo: Math.round(finalTotal * 100),
+          metadata: {
+            orderId,
+            customer: customerData,
+            itemsCount: cartItems.length,
+          },
+        }),
       });
 
-      const initJson = await initRes.json();
+      //safer parsing(prevents "Unexpected token<" in future)
+      const initText = await initRes.text();
+      let initJson: any;
+      try {
+        initJson = JSON.parse(initText);
+      } catch {
+        console.error('Failed to parse Paystack response:', initText);
+        alert('Failed to parse payment response. Please try again.');
+        return;
+      }
 
-      if (!initRes.ok || !initJson?.authorization_url) {
+      const authorizationUrl = initJson?.data?.authorization_url ?? initJson?.authorization_url;
+
+      if (!initRes.ok || !authorizationUrl) {
         console.error('Paystack init error:', initJson);
         alert(initJson?.error || 'Failed to start payment. Please try again.');
         return;
@@ -600,7 +620,7 @@ export default function CheckoutPage() {
       clearCart();
 
       // 4) Redirect to Paystack hosted payment page
-      window.location.href = initJson.authorization_url as string;
+      window.location.href = authorizationUrl as string;
     } catch (error) {
       console.error('Payment error:', error);
       alert('An error occurred while starting payment. Please try again.');

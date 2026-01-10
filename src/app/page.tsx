@@ -500,29 +500,23 @@ import Image from "next/image";
 import Navigation from "@/components/Navigation";
 import SimpleCarousel from "@/components/SimpleCarousel";
 import AddToCartButton from "@/components/AddToCartButton";
-import QuickView from "@/components/QuickView"; //
+import QuickView from "@/components/QuickView";
+import SafeImg from "@/components/SafeImg";
 
-// Add this export to make the page dynamic
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
-// ---------- ENV / HELPERS ---------------------------------------------------
-const RAW_BASE = process.env.NEXT_PUBLIC_STRAPI_URL ?? "http://localhost:1337";
-const STRAPI = RAW_BASE.replace(/\/$/, "");
+// ---------- ENV -------------------------------------------------------------
+const STRAPI = (process.env.NEXT_PUBLIC_STRAPI_URL ?? "http://localhost:1338").replace(
+  /\/$/,
+  ""
+);
 
-interface NormalizedProduct {
-  id: number;
-  Panadol: string;
-  Product_description?: string | null;
-  Price?: number | string;
-  Image_Upload: { url: string }[];
-  amazon_url?: string | null;
-  category?: { name: string; slug: string } | null;
-  featured?: boolean | null;
-}
-
-function prefix(url?: string) {
+// ---------- Helpers ---------------------------------------------------------
+function normalizeStrapiUrl(url?: string | null) {
   if (!url) return "";
-  return url.startsWith("http") ? url : `${STRAPI}${url}`;
+  if (url.startsWith("http://") || url.startsWith("https://")) return url;
+  if (url.startsWith("//")) return `https:${url}`;
+  return `${STRAPI}${url.startsWith("/") ? url : `/${url}`}`;
 }
 
 function slugify(str = "") {
@@ -535,77 +529,158 @@ function slugify(str = "") {
     .replace(/\-\-+/g, "-");
 }
 
-function external(url?: string) {
+function external(url?: string | null) {
   if (!url) return null;
   return /^https?:\/\//i.test(url) ? url : `https://${url}`;
 }
 
-// ---------- NORMALIZER (v4 + v5 compatible) ---------------------------------
-function normalize(items: any[]): NormalizedProduct[] {
+// ✅ Converts Strapi Blocks / RichText into plain text so React doesn’t crash
+function blocksToText(value: any): string {
+  if (!value) return "";
+  if (typeof value === "string") return value;
+
+  if (Array.isArray(value)) {
+    return value
+      .map((node) => blocksToText(node))
+      .filter(Boolean)
+      .join("\n")
+      .trim();
+  }
+
+  if (typeof value === "object") {
+    if (Array.isArray(value.children)) return blocksToText(value.children);
+    if (typeof value.text === "string") return value.text;
+  }
+
+  return "";
+}
+
+// Pick best available size for display
+function pickMediaUrl(media: any): string {
+  const formats = media?.formats;
+  return (
+    formats?.medium?.url ||
+    formats?.small?.url ||
+    formats?.thumbnail?.url ||
+    media?.url ||
+    ""
+  );
+}
+
+// Works with your Strapi shape: image: [{...}] (flat)
+function extractImages(field: any): { url: string }[] {
+  if (!field) return [];
+
+  // Your Strapi returns: image: [ { url, formats... } ]
+  if (Array.isArray(field)) {
+    return field
+      .map((m) => {
+        const attrs = m?.attributes ?? m;
+        const u = pickMediaUrl(attrs);
+        return u ? { url: normalizeStrapiUrl(u) } : null;
+      })
+      .filter(Boolean) as { url: string }[];
+  }
+
+  // In case you ever get v4 relation shape
+  if (field?.data) {
+    const data = Array.isArray(field.data) ? field.data : [field.data];
+    return data
+      .map((m: any) => {
+        const attrs = m?.attributes ?? m;
+        const u = pickMediaUrl(attrs);
+        return u ? { url: normalizeStrapiUrl(u) } : null;
+      })
+      .filter(Boolean) as { url: string }[];
+  }
+
+  // single object
+  const attrs = field?.attributes ?? field;
+  const u = pickMediaUrl(attrs);
+  return u ? [{ url: normalizeStrapiUrl(u) }] : [];
+}
+
+// ---------- Types -----------------------------------------------------------
+type Category = { name: string; slug: string };
+
+type NormalizedProduct = {
+  id: number;
+  name: string;
+  description?: string | null;
+  price: number;
+  images: { url: string }[];
+  amazon_url?: string | null;
+  category?: Category | null;
+  featured?: boolean | null;
+};
+
+// ---------- Normalizers -----------------------------------------------------
+function normalizeProducts(items: any[]): NormalizedProduct[] {
   return (items || []).map((item: any) => {
     const a = item?.attributes ? item.attributes : item || {};
 
-    // media: array OR { data: [] }
-    const imgField = a.Image_Upload;
-    let imagesRaw: any[] = [];
-    if (Array.isArray(imgField)) imagesRaw = imgField;
-    else if (imgField?.data)
-      imagesRaw = Array.isArray(imgField.data) ? imgField.data : [imgField.data];
+    const name = a.name ?? a.title ?? a.Name ?? a.Title ?? "Unnamed Product";
 
-    const images = imagesRaw
-      .map((m: any) => m?.attributes?.url ?? m?.url)
-      .filter(Boolean)
-      .map((u: string) => ({ url: prefix(u) }));
+    const descriptionRaw =
+      a.description ?? a.Product_description ?? a.Description ?? a.product_description ?? null;
 
-    // category can come in several shapes
-    let catAttrs: any = null;
-    if (a.category?.data?.attributes) catAttrs = a.category.data.attributes;
-    else if (a.category?.attributes) catAttrs = a.category.attributes;
-    else if (a.category) catAttrs = a.category;
+    const description = blocksToText(descriptionRaw) || null;
 
-    const category = catAttrs
-      ? {
-          name: catAttrs.Name ?? catAttrs.name ?? catAttrs.title ?? "",
-          slug:
-            catAttrs.Slug ??
-            catAttrs.slug ??
-            slugify(catAttrs.Name ?? catAttrs.name ?? catAttrs.title ?? ""),
-        }
-      : null;
+    const rawPrice = a.price ?? a.Price ?? 0;
+    const priceNum =
+      typeof rawPrice === "string" ? parseFloat(rawPrice) : Number(rawPrice || 0);
+
+    const images = extractImages(a.image ?? a.images ?? a.Image_Upload ?? null);
+
+    // category supports relation or flat
+    const categoryData = a.category?.data ?? a.category ?? null;
+    let category: Category | null = null;
+    if (categoryData) {
+      const cat = Array.isArray(categoryData) ? categoryData[0] : categoryData;
+      const catAttrs = cat?.attributes ? cat.attributes : cat || {};
+      const catName = catAttrs.name ?? catAttrs.Name ?? catAttrs.title ?? "";
+      category = {
+        name: catName,
+        slug: catAttrs.slug ?? catAttrs.Slug ?? slugify(catName),
+      };
+    }
 
     return {
       id: item.id ?? a.id,
-      Panadol: a.Panadol,
-      Product_description: a.Product_description,
-      Price: a.Price,
-      Image_Upload: images,
-      amazon_url: external(a.amazon_url) ?? null, // ✅ normalize once
-      featured: a.featured,
+      name,
+      description,
+      price: Number.isFinite(priceNum) ? priceNum : 0,
+      images,
+      amazon_url: external(a.amazon_url ?? a.amazonUrl ?? null),
+      featured: a.featured ?? false,
       category,
-    } as NormalizedProduct;
+    };
   });
 }
 
-// ---------- FETCHERS (use populate=*) ---------------------------------------
+function normalizeCategories(items: any[]): Category[] {
+  return (items || [])
+    .map((item: any) => {
+      const a = item?.attributes ? item.attributes : item || {};
+      const name = a.name ?? a.Name ?? a.title ?? "";
+      const slug = a.slug ?? a.Slug ?? slugify(name);
+      if (!name || !slug) return null;
+      return { name, slug };
+    })
+    .filter(Boolean) as Category[];
+}
+
+// ---------- Fetchers --------------------------------------------------------
 async function getProducts(): Promise<NormalizedProduct[]> {
   const url = `${STRAPI}/api/products?populate=*&pagination[pageSize]=100`;
   try {
-    const res = await fetch(url);
+    const res = await fetch(url, { cache: "no-store" });
     if (!res.ok) {
-      const body = await res.text().catch(() => "(no body)");
-      console.error(
-        "PRODUCTS ERROR ->",
-        res.status,
-        res.statusText,
-        "\nURL:",
-        url,
-        "\nBODY:",
-        body
-      );
+      console.error("PRODUCTS ERROR ->", res.status, res.statusText, "URL:", url);
       return [];
     }
     const json = await res.json();
-    return normalize(json.data);
+    return normalizeProducts(json.data ?? []);
   } catch (err) {
     console.error("getProducts() exception:", err);
     return [];
@@ -615,61 +690,37 @@ async function getProducts(): Promise<NormalizedProduct[]> {
 async function getFeaturedProducts(): Promise<NormalizedProduct[]> {
   const url = `${STRAPI}/api/products?filters[featured][$eq]=true&populate=*&pagination[pageSize]=100`;
   try {
-    const res = await fetch(url);
+    const res = await fetch(url, { cache: "no-store" });
     if (!res.ok) {
-      const body = await res.text().catch(() => "(no body)");
-      console.error(
-        "FEATURED PRODUCTS ERROR ->",
-        res.status,
-        res.statusText,
-        "\nURL:",
-        url,
-        "\nBODY:",
-        body
-      );
+      console.error("FEATURED PRODUCTS ERROR ->", res.status, res.statusText, "URL:", url);
       return [];
     }
     const json = await res.json();
-    return normalize(json.data);
+    return normalizeProducts(json.data ?? []);
   } catch (err) {
     console.error("getFeaturedProducts() exception:", err);
     return [];
   }
 }
 
-async function getCategories(): Promise<{ name: string; slug: string }[]> {
-  const url = `${STRAPI}/api/categories?pagination[pageSize]=100`;
+async function getCategories(): Promise<Category[]> {
+  // ✅ populate=* so if you later need category images you have them available
+  const url = `${STRAPI}/api/categories?populate=*&pagination[pageSize]=100`;
   try {
-    const res = await fetch(url);
+    const res = await fetch(url, { cache: "no-store" });
     if (!res.ok) {
-      const body = await res.text().catch(() => "(no body)");
-      console.error(
-        "CATEGORIES ERROR ->",
-        res.status,
-        res.statusText,
-        "\nURL:",
-        url,
-        "\nBODY:",
-        body
-      );
+      console.error("CATEGORIES ERROR ->", res.status, res.statusText, "URL:", url);
       return [];
     }
     const json = await res.json();
-    return (json.data || [])
-      .map((c: any) => {
-        const a = c.attributes ? c.attributes : c;
-        const name = a.Name ?? a.name ?? a.title ?? "";
-        const slug = a.Slug ?? a.slug ?? slugify(name);
-        return { name, slug };
-      })
-      .filter(Boolean);
+    return normalizeCategories(json.data ?? []);
   } catch (err) {
     console.error("getCategories() exception:", err);
     return [];
   }
 }
 
-// ---------- SLIDES (from Strapi) + fallback --------------------------------
+// ---------- Slides ----------------------------------------------------------
 type CarouselSlide = {
   src: string;
   alt: string;
@@ -683,36 +734,29 @@ const FALLBACK_SLIDES: CarouselSlide[] = [
     src: "/Cherrybliss.jpeg",
     alt: "CherryBliss",
     title: "Premium Medications",
-    description:
-      "Trusted pharmaceutical solutions for better health and wellness.",
+    description: "Trusted pharmaceutical solutions for better health and wellness.",
     price: 119,
   },
 ];
 
-function productsToSlides(
-  items: NormalizedProduct[],
-  limit = 5
-): CarouselSlide[] {
+function productsToSlides(items: NormalizedProduct[], limit = 5): CarouselSlide[] {
   const slides: CarouselSlide[] = [];
   for (const p of items) {
-    const src = p.Image_Upload?.[0]?.url;
+    const src = p.images?.[0]?.url;
     if (!src) continue;
-    const priceNum = Number(
-      typeof p.Price === "string" ? parseFloat(p.Price) : p.Price || 0
-    );
     slides.push({
       src,
-      alt: p.Panadol,
-      title: p.Panadol,
-      description: (p.Product_description ?? "").toString().slice(0, 120),
-      price: priceNum,
+      alt: p.name,
+      title: p.name,
+      description: (p.description ?? "").toString().slice(0, 120),
+      price: p.price ?? 0,
     });
     if (slides.length >= limit) break;
   }
   return slides;
 }
 
-// ---------- NICE BUTTON STYLE (for Add to Cart) -----------------------------
+// ---------- Button style ----------------------------------------------------
 const cartBtnClass =
   "group inline-flex items-center justify-center w-full rounded-xl " +
   "bg-blue-600 text-white py-3 font-semibold shadow-sm " +
@@ -720,7 +764,7 @@ const cartBtnClass =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 " +
   "transition";
 
-// ---------- PAGE ------------------------------------------------------------
+// ---------- Page ------------------------------------------------------------
 export default async function Home() {
   const [featuredProducts, products, categories] = await Promise.all([
     getFeaturedProducts(),
@@ -735,13 +779,9 @@ export default async function Home() {
   const renderGrid = (items: NormalizedProduct[]) => (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
       {items.map((product) => {
-        const imageUrl = product.Image_Upload?.[0]?.url ?? null;
+        const imageUrl = product.images?.[0]?.url ?? "";
         const categoryName = product.category?.name ?? "Uncategorized";
-        const priceNum = Number(
-          typeof product.Price === "string"
-            ? parseFloat(product.Price)
-            : product.Price || 0
-        );
+        const priceNum = product.price ?? 0;
 
         return (
           <div
@@ -751,21 +791,24 @@ export default async function Home() {
             {/* image */}
             <div className="relative overflow-hidden">
               {imageUrl ? (
-                <img
+                <SafeImg
                   src={imageUrl}
-                  alt={product.Panadol}
+                  alt={product.name}
                   className="w-full h-64 object-cover group-hover:scale-105 transition duration-300"
+                  loading="lazy"
                 />
               ) : (
                 <div className="w-full h-64 bg-gray-200 flex items-center justify-center">
                   <span className="text-gray-500">No image</span>
                 </div>
               )}
+
               {product.featured && (
                 <div className="absolute top-4 left-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
                   Featured
                 </div>
               )}
+
               <div className="absolute top-4 right-4">
                 <button className="bg-white rounded-full p-2 shadow-md hover:bg-red-500 hover:text-white transition duration-300">
                   <Heart className="w-4 h-4" />
@@ -781,22 +824,19 @@ export default async function Home() {
                     <Star key={i} className="w-4 h-4 fill-current" />
                   ))}
                 </div>
-                {/* <span className="text-sm text-gray-600 ml-2">(online reviews)</span> */}
               </div>
 
-              {/* Title block with consistent height */}
               <h3 className="text-xl font-semibold text-gray-800 mb-2 line-clamp-2 min-h-[56px]">
-                {product.Panadol}
+                {product.name}
               </h3>
 
-              {/* Description block (clamped + QuickView modal) */}
               <div className="text-gray-600 text-sm leading-relaxed mb-3">
                 <p className="whitespace-pre-line line-clamp-4 min-h-[88px]">
-                  {product.Product_description || "No description available."}
+                  {product.description || "No description available."}
                 </p>
                 <QuickView
-                  title={product.Panadol}
-                  text={product.Product_description || ""}
+                  title={product.name}
+                  text={product.description || ""}
                   className="mt-1 text-blue-600 hover:underline text-sm"
                 />
               </div>
@@ -810,7 +850,6 @@ export default async function Home() {
                 </span>
               </div>
 
-              {/* CTAs anchored to bottom */}
               <div className="space-y-2 mt-auto">
                 <a
                   href={product.amazon_url ?? "#"}
@@ -823,9 +862,9 @@ export default async function Home() {
 
                 <AddToCartButton
                   id={product.id}
-                  name={product.Panadol}
+                  name={product.name}
                   price={priceNum}
-                  image={imageUrl || ""}
+                  image={imageUrl}
                   className={cartBtnClass}
                 >
                   <ShoppingCart className="w-4 h-4 mr-2 transition-transform group-hover:-translate-y-0.5" />
@@ -843,7 +882,6 @@ export default async function Home() {
     <div className="min-h-screen bg-gray-50">
       {/* <Navigation categories={categories} /> */}
 
-      {/* Hero / Carousel from Strapi (with fallback) */}
       <section className="relative">
         <SimpleCarousel
           slides={slidesToShow}
@@ -853,20 +891,15 @@ export default async function Home() {
         />
       </section>
 
-      {/* Featured Section */}
       <section className="py-16 bg-gray-50">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-800 mb-2">
-              Featured Products
-            </h2>
+            <h2 className="text-3xl font-bold text-gray-800 mb-2">Featured Products</h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
               Discover our carefully curated collection of premium products
             </p>
           </div>
-          {renderGrid(
-            (featuredProducts.length ? featuredProducts : products).slice(0, 8)
-          )}
+          {renderGrid((featuredProducts.length ? featuredProducts : products).slice(0, 8))}
         </div>
       </section>
 
@@ -875,8 +908,7 @@ export default async function Home() {
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold mb-4">Stay Updated</h2>
           <p className="text-blue-100 mb-8 max-w-2xl mx-auto">
-            Subscribe to our newsletter for exclusive deals and new product
-            announcements
+            Subscribe to our newsletter for exclusive deals and new product announcements
           </p>
           <div className="max-w-md mx-auto flex">
             <input
@@ -910,18 +942,10 @@ export default async function Home() {
                 Premium pharmaceutical products for your health and wellness
               </p>
               <div className="flex space-x-4">
-                <a href="#" className="text-gray-400 hover:text-white transition">
-                  Facebook
-                </a>
-                <a href="#" className="text-gray-400 hover:text-white transition">
-                  Instagram
-                </a>
-                <a href="#" className="text-gray-400 hover:text-white transition">
-                  Twitter
-                </a>
-                <a href="#" className="text-gray-400 hover:text-white transition">
-                  Tiktok
-                </a>
+                <a href="#" className="text-gray-400 hover:text-white transition">Facebook</a>
+                <a href="#" className="text-gray-400 hover:text-white transition">Instagram</a>
+                <a href="#" className="text-gray-400 hover:text-white transition">Twitter</a>
+                <a href="#" className="text-gray-400 hover:text-white transition">Tiktok</a>
               </div>
             </div>
 
@@ -974,4 +998,3 @@ export default async function Home() {
     </div>
   );
 }
-

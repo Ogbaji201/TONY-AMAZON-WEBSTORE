@@ -43,7 +43,7 @@ export default function AboutPage() {
       {/* Hero Section */}
       <section className="bg-gradient-to-r from-blue-600 to-purple-700 text-white py-20">
         <div className="container mx-auto px-4 text-center">
-          <h1 className="text-5xl font-bold mb-6">About PharmaStore</h1>
+          <h1 className="text-5xl font-bold mb-6">About Cherybliss Health</h1>
           <p className="text-xl max-w-3xl mx-auto mb-8">
             Your trusted partner in healthcare, delivering quality medications and wellness products 
             right to your doorstep.
@@ -150,7 +150,7 @@ export default function AboutPage() {
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold text-gray-800 mb-4">Why Choose Us?</h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              Here's what sets PharmaStore apart from other healthcare providers
+              Here's what sets Cherybliss Health apart from other healthcare providers
             </p>
           </div>
 
@@ -181,7 +181,7 @@ export default function AboutPage() {
               </div>
               <h3 className="text-xl font-semibold text-gray-800 mb-3">Expert Support</h3>
               <p className="text-gray-600">
-                Consult with our licensed pharmacists for personalized recommendations.
+                Consult with our licensed pharmacists and medical practitioners for personalized recommendations.
               </p>
             </div>
           </div>

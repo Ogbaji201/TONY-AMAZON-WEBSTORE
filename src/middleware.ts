@@ -1,6 +1,8 @@
 // middleware.ts
 import { NextRequest, NextResponse } from "next/server";
 
+
+
 function unauthorized() {
   return new NextResponse("Unauthorized", {
     status: 401,
@@ -18,12 +20,15 @@ export function middleware(req: NextRequest) {
 
   const { pathname } = req.nextUrl;
 
-  // 🚨 Allow PUBLIC checkout
-  if (pathname === "/api/orders" && req.method === "POST") {
+  // ✅ PUBLIC ROUTES (no auth)
+  if (
+    (pathname === "/api/orders" && req.method === "POST") ||
+    pathname.startsWith("/api/payments/paystack")
+  ) {
     return NextResponse.next();
   }
 
-  // 🔐 Everything else below requires admin auth
+  // 🔐 Everything else requires admin auth
   const authHeader = req.headers.get("authorization");
   if (!authHeader?.startsWith("Basic ")) return unauthorized();
 
@@ -42,12 +47,11 @@ export const config = {
   matcher: [
     "/admin/:path*",
 
-    // Orders API
+    // Orders
     "/api/orders",
+    "/api/orders/:path*",
 
-    // Exports
-    "/api/orders/export",
-    "/api/orders/export-xlsx",
-    "/api/orders/email-export",
+    // ✅ Paystack
+    "/api/payments/:path*",
   ],
 };
