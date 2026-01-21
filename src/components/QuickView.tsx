@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function QuickView({
   title,
@@ -16,6 +16,17 @@ export default function QuickView({
   const [open, setOpen] = useState(false);
   if (!text) return null;
 
+  useEffect(() => {
+    if (!open) return;
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [open]);
+
   return (
     <>
       <button
@@ -27,12 +38,20 @@ export default function QuickView({
       </button>
 
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          role="dialog"
+          aria-modal="true"
+          aria-label={title ? `Quick view: ${title}` : "Quick view"}
+        >
           {/* backdrop */}
-          <div
+          <button
+            type="button"
+            aria-label="Close dialog"
             className="absolute inset-0 bg-black/50"
             onClick={() => setOpen(false)}
           />
+
           {/* dialog */}
           <div className="relative bg-white w-[92vw] max-w-xl max-h-[80vh] rounded-2xl shadow-2xl p-6 overflow-y-auto">
             <h3 className="text-xl font-semibold mb-3">{title}</h3>

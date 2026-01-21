@@ -186,7 +186,7 @@ export default function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
 
-  const RAW_BASE = process.env.NEXT_PUBLIC_STRAPI_URL ?? "http://localhost:1337";
+  const RAW_BASE = process.env.NEXT_PUBLIC_STRAPI_URL ?? "http://localhost:1338";
   const STRAPI = RAW_BASE.replace(/\/$/, "");
 
   useEffect(() => {
