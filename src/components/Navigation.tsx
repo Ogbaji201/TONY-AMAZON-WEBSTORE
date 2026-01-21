@@ -185,6 +185,7 @@ export interface Category {
 
 export default function Navigation() {
   const router = useRouter();
+
   const [isOpen, setIsOpen] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
 
@@ -229,17 +230,16 @@ export default function Navigation() {
     [categories]
   );
 
-  // ✅ helper: close menu then navigate (NO Link onClick)
-  const go = (href: string) => {
+  function go(to: string) {
     setIsOpen(false);
-    router.push(href);
-  };
+    router.push(to);
+  }
 
   return (
     <nav className="bg-white shadow-sm">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center py-4">
-          {/* Logo (no onClick on Link) */}
+          {/* Logo (NO onClick on Link) */}
           <Link href="/" className="flex items-center space-x-2">
             <img
               src="/Cherrybliss.jpeg"
@@ -260,8 +260,8 @@ export default function Navigation() {
             {/* Products Dropdown */}
             <div className="relative group">
               <button
-                className="text-gray-600 hover:text-gray-900 transition duration-300 flex items-center"
                 type="button"
+                className="text-gray-600 hover:text-gray-900 transition duration-300 flex items-center"
                 aria-haspopup="true"
                 aria-expanded="false"
               >
@@ -301,9 +301,9 @@ export default function Navigation() {
           {/* Cart + Wishlist */}
           <div className="flex items-center space-x-4">
             <button
+              type="button"
               className="p-2 rounded-full hover:bg-gray-100 transition duration-300 relative"
               aria-label="Wishlist"
-              type="button"
             >
               <Heart className="w-5 h-5" />
               <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
@@ -314,23 +314,31 @@ export default function Navigation() {
             <Cart />
 
             <button
+              type="button"
               className="md:hidden p-2 ml-4"
               onClick={() => setIsOpen((v) => !v)}
               aria-label="Toggle menu"
-              type="button"
             >
               {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
           </div>
         </div>
 
-        {/* Mobile Navigation (use buttons -> router.push) */}
+        {/* Mobile Navigation (use buttons + router, not Link onClick) */}
         <div className={`md:hidden ${isOpen ? "block" : "hidden"} py-4 border-t`}>
-          <button type="button" className="block py-2 text-gray-600 hover:text-gray-900 w-full text-left" onClick={() => go("/")}>
+          <button
+            type="button"
+            className="block w-full text-left py-2 text-gray-600 hover:text-gray-900"
+            onClick={() => go("/")}
+          >
             Home
           </button>
 
-          <button type="button" className="block py-2 text-gray-600 hover:text-gray-900 w-full text-left" onClick={() => go("/products")}>
+          <button
+            type="button"
+            className="block w-full text-left py-2 text-gray-600 hover:text-gray-900"
+            onClick={() => go("/products")}
+          >
             All Products
           </button>
 
@@ -338,17 +346,26 @@ export default function Navigation() {
             <button
               key={c.slug}
               type="button"
-              className="block py-2 pl-4 text-gray-600 hover:text-gray-900 capitalize w-full text-left"
+              className="block w-full text-left py-2 pl-4 text-gray-600 hover:text-gray-900 capitalize"
               onClick={() => go(`/category/${c.slug}`)}
             >
               {c.name || c.slug.replace(/-/g, " ")}
             </button>
           ))}
 
-          <button type="button" className="block py-2 text-gray-600 hover:text-gray-900 w-full text-left" onClick={() => go("/about")}>
+          <button
+            type="button"
+            className="block w-full text-left py-2 text-gray-600 hover:text-gray-900"
+            onClick={() => go("/about")}
+          >
             About Us
           </button>
-          <button type="button" className="block py-2 text-gray-600 hover:text-gray-900 w-full text-left" onClick={() => go("/contact")}>
+
+          <button
+            type="button"
+            className="block w-full text-left py-2 text-gray-600 hover:text-gray-900"
+            onClick={() => go("/contact")}
+          >
             Contact
           </button>
         </div>
