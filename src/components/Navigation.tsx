@@ -173,6 +173,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Menu, X, Heart } from "lucide-react";
 import Cart from "./Cart";
 
@@ -183,6 +184,7 @@ export interface Category {
 }
 
 export default function Navigation() {
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
 
@@ -194,10 +196,9 @@ export default function Navigation() {
 
     async function loadCategories() {
       try {
-        const res = await fetch(
-          `${STRAPI}/api/categories?pagination[pageSize]=100`,
-          { cache: "no-store" }
-        );
+        const res = await fetch(`${STRAPI}/api/categories?pagination[pageSize]=100`, {
+          cache: "no-store",
+        });
 
         if (!res.ok) return;
         const json = await res.json();
@@ -213,7 +214,7 @@ export default function Navigation() {
 
         if (!cancelled) setCategories(cats);
       } catch {
-        // ignore quietly
+        // ignore
       }
     }
 
@@ -228,36 +229,31 @@ export default function Navigation() {
     [categories]
   );
 
-  const closeMobile = () => setIsOpen(false);
+  // ✅ helper: close menu then navigate (NO Link onClick)
+  const go = (href: string) => {
+    setIsOpen(false);
+    router.push(href);
+  };
 
   return (
     <nav className="bg-white shadow-sm">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center py-4">
-          {/* Logo */}
+          {/* Logo (no onClick on Link) */}
           <Link href="/" className="flex items-center space-x-2">
-            <span
-              onClick={closeMobile}
-              className="flex items-center space-x-2"
-              role="link"
-            >
-              <img
-                src="/Cherrybliss.jpeg"
-                alt="CherryBliss Logo"
-                width={40}
-                height={40}
-                className="rounded-lg object-contain"
-              />
-              <span className="text-2xl font-bold">CherryBliss</span>
-            </span>
+            <img
+              src="/Cherrybliss.jpeg"
+              alt="CherryBliss Logo"
+              width={40}
+              height={40}
+              className="rounded-lg object-contain"
+            />
+            <span className="text-2xl font-bold">CherryBliss</span>
           </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            <Link
-              href="/"
-              className="text-gray-600 hover:text-gray-900 transition duration-300"
-            >
+            <Link href="/" className="text-gray-600 hover:text-gray-900 transition duration-300">
               Home
             </Link>
 
@@ -265,32 +261,19 @@ export default function Navigation() {
             <div className="relative group">
               <button
                 className="text-gray-600 hover:text-gray-900 transition duration-300 flex items-center"
+                type="button"
                 aria-haspopup="true"
                 aria-expanded="false"
-                type="button"
               >
                 Products
-                <svg
-                  className="w-4 h-4 ml-1"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
-                  />
+                <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
 
               <div className="absolute top-full left-0 mt-2 w-56 bg-white rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
                 <div className="py-2">
-                  <Link
-                    href="/products"
-                    className="block px-4 py-2 text-gray-800 hover:bg-gray-100"
-                  >
+                  <Link href="/products" className="block px-4 py-2 text-gray-800 hover:bg-gray-100">
                     All Products
                   </Link>
 
@@ -307,16 +290,10 @@ export default function Navigation() {
               </div>
             </div>
 
-            <Link
-              href="/about"
-              className="text-gray-600 hover:text-gray-900 transition duration-300"
-            >
+            <Link href="/about" className="text-gray-600 hover:text-gray-900 transition duration-300">
               About
             </Link>
-            <Link
-              href="/contact"
-              className="text-gray-600 hover:text-gray-900 transition duration-300"
-            >
+            <Link href="/contact" className="text-gray-600 hover:text-gray-900 transition duration-300">
               Contact
             </Link>
           </div>
@@ -347,52 +324,33 @@ export default function Navigation() {
           </div>
         </div>
 
-        {/* Mobile Navigation */}
+        {/* Mobile Navigation (use buttons -> router.push) */}
         <div className={`md:hidden ${isOpen ? "block" : "hidden"} py-4 border-t`}>
-          <Link href="/" className="block py-2 text-gray-600 hover:text-gray-900">
-            <span onClick={closeMobile} role="link">
-              Home
-            </span>
-          </Link>
+          <button type="button" className="block py-2 text-gray-600 hover:text-gray-900 w-full text-left" onClick={() => go("/")}>
+            Home
+          </button>
 
-          <Link
-            href="/products"
-            className="block py-2 text-gray-600 hover:text-gray-900"
-          >
-            <span onClick={closeMobile} role="link">
-              All Products
-            </span>
-          </Link>
+          <button type="button" className="block py-2 text-gray-600 hover:text-gray-900 w-full text-left" onClick={() => go("/products")}>
+            All Products
+          </button>
 
           {safeCategories.map((c) => (
-            <Link
+            <button
               key={c.slug}
-              href={`/category/${c.slug}`}
-              className="block py-2 pl-4 text-gray-600 hover:text-gray-900 capitalize"
+              type="button"
+              className="block py-2 pl-4 text-gray-600 hover:text-gray-900 capitalize w-full text-left"
+              onClick={() => go(`/category/${c.slug}`)}
             >
-              <span onClick={closeMobile} role="link">
-                {c.name || c.slug.replace(/-/g, " ")}
-              </span>
-            </Link>
+              {c.name || c.slug.replace(/-/g, " ")}
+            </button>
           ))}
 
-          <Link
-            href="/about"
-            className="block py-2 text-gray-600 hover:text-gray-900"
-          >
-            <span onClick={closeMobile} role="link">
-              About Us
-            </span>
-          </Link>
-
-          <Link
-            href="/contact"
-            className="block py-2 text-gray-600 hover:text-gray-900"
-          >
-            <span onClick={closeMobile} role="link">
-              Contact
-            </span>
-          </Link>
+          <button type="button" className="block py-2 text-gray-600 hover:text-gray-900 w-full text-left" onClick={() => go("/about")}>
+            About Us
+          </button>
+          <button type="button" className="block py-2 text-gray-600 hover:text-gray-900 w-full text-left" onClick={() => go("/contact")}>
+            Contact
+          </button>
         </div>
       </div>
     </nav>
