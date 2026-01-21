@@ -543,7 +543,6 @@ function external(url?: string | null) {
   return /^https?:\/\//i.test(url) ? url : `https://${url}`;
 }
 
-// ✅ Converts Strapi Blocks / RichText into plain text so React doesn’t crash
 function blocksToText(value: any): string {
   if (!value) return "";
   if (typeof value === "string") return value;
@@ -564,7 +563,6 @@ function blocksToText(value: any): string {
   return "";
 }
 
-// Pick best available size for display
 function pickMediaUrl(media: any): string {
   const formats = media?.formats;
   return (
@@ -576,7 +574,6 @@ function pickMediaUrl(media: any): string {
   );
 }
 
-// Works with your Strapi shape: image: [{...}] (flat)
 function extractImages(field: any): { url: string }[] {
   if (!field) return [];
 
@@ -607,9 +604,9 @@ function extractImages(field: any): { url: string }[] {
 }
 
 // ---------- Types -----------------------------------------------------------
-type Category = { name: string; slug: string };
+export type Category = { name: string; slug: string };
 
-type NormalizedProduct = {
+export type NormalizedProduct = {
   id: number;
   name: string;
   description?: string | null;
@@ -644,24 +641,25 @@ function normalizeProducts(items: any[]): NormalizedProduct[] {
 
     const categoryData = a.category?.data ?? a.category ?? null;
     let category: Category | null = null;
+
     if (categoryData) {
       const cat = Array.isArray(categoryData) ? categoryData[0] : categoryData;
       const catAttrs = cat?.attributes ? cat.attributes : cat || {};
       const catName = catAttrs.name ?? catAttrs.Name ?? catAttrs.title ?? "";
       category = {
-        name: catName,
-        slug: catAttrs.slug ?? catAttrs.Slug ?? slugify(catName),
+        name: String(catName || ""),
+        slug: String(catAttrs.slug ?? catAttrs.Slug ?? slugify(catName)),
       };
     }
 
     return {
-      id: item.id ?? a.id,
-      name,
+      id: Number(item.id ?? a.id),
+      name: String(name),
       description,
       price: Number.isFinite(priceNum) ? priceNum : 0,
       images,
       amazon_url: external(a.amazon_url ?? a.amazonUrl ?? null),
-      featured: a.featured ?? false,
+      featured: Boolean(a.featured ?? false),
       category,
     };
   });
@@ -674,19 +672,23 @@ function normalizeCategories(items: any[]): Category[] {
       const name = a.name ?? a.Name ?? a.title ?? "";
       const slug = a.slug ?? a.Slug ?? slugify(name);
       if (!name || !slug) return null;
-      return { name, slug };
+      return { name: String(name), slug: String(slug) };
     })
     .filter(Boolean) as Category[];
 }
 
 // ---------- Fetchers --------------------------------------------------------
+async function getJson(url: string) {
+  const res = await fetch(url, { next: { revalidate: 0 } }); // equivalent to no-store
+  if (!res.ok) return null;
+  return res.json();
+}
+
 async function getProducts(): Promise<NormalizedProduct[]> {
   const url = `${STRAPI}/api/products?populate=*&pagination[pageSize]=100`;
   try {
-    const res = await fetch(url, { cache: "no-store" });
-    if (!res.ok) return [];
-    const json = await res.json();
-    return normalizeProducts(json.data ?? []);
+    const json = await getJson(url);
+    return normalizeProducts(json?.data ?? []);
   } catch {
     return [];
   }
@@ -695,10 +697,8 @@ async function getProducts(): Promise<NormalizedProduct[]> {
 async function getFeaturedProducts(): Promise<NormalizedProduct[]> {
   const url = `${STRAPI}/api/products?filters[featured][$eq]=true&populate=*&pagination[pageSize]=100`;
   try {
-    const res = await fetch(url, { cache: "no-store" });
-    if (!res.ok) return [];
-    const json = await res.json();
-    return normalizeProducts(json.data ?? []);
+    const json = await getJson(url);
+    return normalizeProducts(json?.data ?? []);
   } catch {
     return [];
   }
@@ -707,10 +707,8 @@ async function getFeaturedProducts(): Promise<NormalizedProduct[]> {
 async function getCategories(): Promise<Category[]> {
   const url = `${STRAPI}/api/categories?populate=*&pagination[pageSize]=100`;
   try {
-    const res = await fetch(url, { cache: "no-store" });
-    if (!res.ok) return [];
-    const json = await res.json();
-    return normalizeCategories(json.data ?? []);
+    const json = await getJson(url);
+    return normalizeCategories(json?.data ?? []);
   } catch {
     return [];
   }
@@ -724,6 +722,7 @@ export default async function Home() {
     getCategories(),
   ]);
 
+  // ✅ Ensure props are JSON-serializable (no functions, no class instances)
   return (
     <HomeClient
       featuredProducts={featuredProducts}
