@@ -1,15 +1,7 @@
 "use client";
 
-import {
-  Star,
-  ShoppingCart,
-  Home as HomeIcon,
-  Phone,
-  Mail,
-  Heart,
-} from "lucide-react";
+import { Star, ShoppingCart, Home as HomeIcon, Phone, Mail, Heart } from "lucide-react";
 import Image from "next/image";
-// import Navigation from "@/components/Navigation";
 import SimpleCarousel from "@/components/SimpleCarousel";
 import AddToCartButton from "@/components/AddToCartButton";
 import QuickView from "@/components/QuickView";
@@ -169,16 +161,14 @@ export default function HomeClient({
                   Buy on Amazon
                 </a>
 
+                {/* ✅ FIX OPTION 1: self-closing (no children) */}
                 <AddToCartButton
                   id={product.id}
                   name={product.name}
                   price={priceNum}
                   image={imageUrl}
                   className={cartBtnClass}
-                >
-                  <ShoppingCart className="w-4 h-4 mr-2 transition-transform group-hover:-translate-y-0.5" />
-                  Add to Cart
-                </AddToCartButton>
+                />
               </div>
             </div>
           </div>
@@ -189,9 +179,6 @@ export default function HomeClient({
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* If Navigation is interactive, keep it here (client) */}
-      {/* <Navigation categories={categories} /> */}
-
       <section className="relative">
         <SimpleCarousel
           slides={slidesToShow}

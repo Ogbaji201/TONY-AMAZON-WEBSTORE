@@ -510,7 +510,7 @@
 //   );
 // }
 
-import HomeClient from "./HomeClient";
+import HomeClient from "./home/HomeClient";
 
 export const dynamic = "force-dynamic";
 

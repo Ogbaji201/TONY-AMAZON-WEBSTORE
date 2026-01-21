@@ -1,5 +1,3 @@
-
-
 import { ShoppingBag, Star, Heart } from "lucide-react";
 import AddToCartButton from "@/components/AddToCartButton";
 import QuickView from "@/components/QuickView";
@@ -104,7 +102,11 @@ function normalizeProducts(items: any[]): NormalizedProduct[] {
     const name = a.name ?? a.title ?? a.Name ?? a.Title ?? "Unnamed Product";
 
     const descriptionRaw =
-      a.description ?? a.Product_description ?? a.Description ?? a.product_description ?? null;
+      a.description ??
+      a.Product_description ??
+      a.Description ??
+      a.product_description ??
+      null;
 
     const description = blocksToText(descriptionRaw) || null;
 
@@ -178,7 +180,9 @@ export default async function ProductsPage() {
         {products.length === 0 ? (
           <div className="text-center py-12">
             <div className="text-gray-500 text-lg mb-4">No products found</div>
-            <div className="text-gray-400 text-sm">Check your Strapi connection and product data</div>
+            <div className="text-gray-400 text-sm">
+              Check your Strapi connection and product data
+            </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
@@ -258,15 +262,14 @@ export default async function ProductsPage() {
                     </div>
 
                     <div className="mt-auto">
+                      {/* ✅ FIX OPTION 1: self-closing (no children) */}
                       <AddToCartButton
                         id={p.id}
                         name={p.name}
                         price={p.price}
                         image={imageUrl}
                         className={cartBtnClass}
-                      >
-                        Add to Cart
-                      </AddToCartButton>
+                      />
                     </div>
                   </div>
                 </div>

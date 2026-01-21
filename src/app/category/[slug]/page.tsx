@@ -396,7 +396,6 @@ import QuickView from "@/components/QuickView";
 
 export const dynamic = "force-dynamic";
 
-// const STRAPI = (process.env.NEXT_PUBLIC_STRAPI_URL ?? "http://localhost:1338").replace(/\/$/, "");
 const STRAPI = (process.env.NEXT_PUBLIC_STRAPI_URL ?? "http://localhost:1338").replace(/\/$/, "");
 
 // ---------- helpers ----------
@@ -485,7 +484,11 @@ function normalizeProducts(items: any[]): NormalizedProduct[] {
     const name = a.name ?? a.title ?? a.Name ?? a.Title ?? "Unnamed Product";
 
     const descriptionRaw =
-      a.description ?? a.Product_description ?? a.Description ?? a.product_description ?? null;
+      a.description ??
+      a.Product_description ??
+      a.Description ??
+      a.product_description ??
+      null;
 
     const description = blocksToText(descriptionRaw) || null;
 
@@ -529,37 +532,30 @@ async function getProductsByCategorySlug(slug: string): Promise<NormalizedProduc
 
   try {
     const res = await fetch(url, { cache: "no-store" });
-    if (!res.ok) {
-      const body = await res.text().catch(() => "(no body)");
-      console.error("CATEGORY PRODUCTS ERROR ->", res.status, res.statusText, "\nURL:", url, "\nBODY:", body);
-      return [];
-    }
+    if (!res.ok) return [];
     const json = await res.json();
     return normalizeProducts(json.data ?? []);
-  } catch (err) {
-    console.error("getProductsByCategorySlug exception:", err);
+  } catch {
     return [];
   }
 }
 
 async function getCategoryName(slug?: string): Promise<string> {
-  const safeSlug = (slug ?? "").trim();
-  if (!safeSlug) return "Category";
+  if (!slug) return "Category";
 
   const url =
-    `${STRAPI}/api/categories?filters[slug][$eq]=${encodeURIComponent(safeSlug)}` +
+    `${STRAPI}/api/categories?filters[slug][$eq]=${encodeURIComponent(slug)}` +
     `&populate=*`;
 
   try {
     const res = await fetch(url, { cache: "no-store" });
-    if (!res.ok) return safeSlug.replace(/-/g, " ");
-
+    if (!res.ok) return slug.replace(/-/g, " ");
     const json = await res.json();
     const first = json?.data?.[0];
     const a = first?.attributes ? first.attributes : first;
-    return (a?.name ?? a?.Name ?? a?.title ?? safeSlug.replace(/-/g, " ")) as string;
+    return (a?.name ?? a?.title ?? slug.replace(/-/g, " ")) as string;
   } catch {
-    return safeSlug.replace(/-/g, " ");
+    return slug.replace(/-/g, " ");
   }
 }
 
@@ -570,7 +566,7 @@ const cartBtnClass =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 " +
   "transition";
 
-// ✅ NOTE: params is a Promise in your Next setup
+// ---------- page ----------
 export default async function CategoryPage({
   params,
 }: {
@@ -586,118 +582,47 @@ export default async function CategoryPage({
   return (
     <div className="min-h-screen bg-white">
       <div className="container mx-auto px-4 py-10">
-        <div className="text-center mb-10">
-          <h1 className="text-4xl font-bold text-gray-900">{categoryName}</h1>
-          <p className="text-gray-600 mt-2">
-            {products.length} product{products.length === 1 ? "" : "s"} found in the{" "}
-            <span className="font-semibold">{categoryName}</span> category.
-          </p>
-        </div>
+        <h1 className="text-4xl font-bold text-center mb-10">{categoryName}</h1>
 
-        {products.length === 0 ? (
-          <div className="text-center text-gray-600 py-16">
-            No products found for this category.
-            <div className="mt-3 text-sm text-gray-400">
-              Check that products are linked to this category and that category slug matches.
-            </div>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-            {products.map((p) => {
-              const imageUrl = p.images?.[0]?.url ?? "";
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+          {products.map((p) => {
+            const imageUrl = p.images?.[0]?.url ?? "";
 
-              return (
-                <div
-                  key={p.id}
-                  className="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition duration-300 group flex flex-col"
-                >
-                  <div className="relative overflow-hidden bg-gray-100">
-                    {imageUrl ? (
-                      <SafeImg
-                        src={imageUrl}
-                        alt={p.name}
-                        className="w-full h-64 object-cover group-hover:scale-105 transition duration-300"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className="w-full h-64 flex items-center justify-center bg-gray-200 text-gray-500">
-                        No image
-                      </div>
-                    )}
+            return (
+              <div
+                key={p.id}
+                className="bg-white rounded-2xl shadow-md overflow-hidden flex flex-col"
+              >
+                <SafeImg
+                  src={imageUrl}
+                  alt={p.name}
+                  className="w-full h-64 object-cover"
+                />
 
-                    {p.featured && (
-                      <div className="absolute top-4 left-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                        Featured
-                      </div>
-                    )}
+                <div className="p-6 flex flex-col h-full">
+                  <h3 className="text-xl font-semibold mb-2">{p.name}</h3>
 
-                    <div className="absolute top-4 right-4">
-                      <button
-                        className="bg-white rounded-full p-2 shadow-md hover:bg-red-500 hover:text-white transition duration-300"
-                        aria-label="Add to favorites"
-                      >
-                        <Heart className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
+                  <p className="text-sm text-gray-600 mb-4 line-clamp-3">
+                    {p.description || "No description available."}
+                  </p>
 
-                  <div className="p-6 flex flex-col h-full">
-                    <div className="flex items-center mb-2">
-                      <div className="flex text-yellow-400">
-                        {[...Array(5)].map((_, i) => (
-                          <Star key={i} className="w-4 h-4 fill-current" />
-                        ))}
-                      </div>
-                      <span className="text-sm text-gray-600 ml-2">(online reviews)</span>
-                    </div>
+                  <span className="text-2xl font-bold text-green-600 mb-4">
+                    ₦{Number(p.price).toLocaleString()}
+                  </span>
 
-                    <h3 className="text-xl font-semibold text-gray-800 mb-2 line-clamp-2 min-h-[56px]">
-                      {p.name}
-                    </h3>
-
-                    <div className="text-gray-600 text-sm leading-relaxed mb-3">
-                      <p className="whitespace-pre-line line-clamp-4 min-h-[88px]">
-                        {p.description || "No description available."}
-                      </p>
-                      <QuickView
-                        title={p.name}
-                        text={p.description || ""}
-                        className="mt-1 text-blue-600 hover:underline text-sm"
-                      />
-                    </div>
-
-                    <div className="flex items-center justify-between mb-4">
-                      <span className="text-2xl font-bold text-green-600">
-                        ₦{Number(p.price).toLocaleString()}
-                      </span>
-
-                      <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                        {p.category?.name ?? categoryName}
-                      </span>
-                    </div>
-
-                    <div className="mt-auto">
-                      <AddToCartButton
-                        id={p.id}
-                        name={p.name}
-                        price={p.price}
-                        image={imageUrl}
-                        className={cartBtnClass}
-                      >
-                        Add to Cart
-                      </AddToCartButton>
-                    </div>
+                  <div className="mt-auto">
+                    <AddToCartButton
+                      id={p.id}
+                      name={p.name}
+                      price={p.price}
+                      image={imageUrl}
+                      className={cartBtnClass}
+                    />
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        )}
-
-        <div className="text-center mt-12">
-          <a href="/products" className="text-blue-600 hover:underline">
-            ← Back to all products
-          </a>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
