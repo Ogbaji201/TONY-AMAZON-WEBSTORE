@@ -19,7 +19,13 @@ const nextConfig = {
       // Production Strapi (update if needed)
       {
         protocol: 'https',
-        hostname: 'api.cherryblisshealth.com',
+        hostname: 'api.cheryblisshealth.com',
+        pathname: '/uploads/**',
+      },
+
+      {
+        protocol: 'https',
+        hostname: 'www.cheryblisshealth.com',
         pathname: '/uploads/**',
       },
     ],

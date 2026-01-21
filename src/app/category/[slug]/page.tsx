@@ -396,6 +396,7 @@ import QuickView from "@/components/QuickView";
 
 export const dynamic = "force-dynamic";
 
+// const STRAPI = (process.env.NEXT_PUBLIC_STRAPI_URL ?? "http://localhost:1338").replace(/\/$/, "");
 const STRAPI = (process.env.NEXT_PUBLIC_STRAPI_URL ?? "http://localhost:1338").replace(/\/$/, "");
 
 // ---------- helpers ----------
