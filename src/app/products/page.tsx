@@ -226,7 +226,7 @@ export default async function ProductsPage() {
                       </button>
                     </div>
                   </div>
-
+                  {/* # To be removed during scaling. */}
                   <div className="p-6 flex flex-col h-full">
                     <div className="flex items-center mb-2">
                       <div className="flex text-yellow-400">

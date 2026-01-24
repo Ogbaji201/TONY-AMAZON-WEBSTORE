@@ -281,14 +281,14 @@ export default function HomeClient({
                 </div>
                 <div className="flex items-center">
                   <Mail className="w-5 h-5 mr-3" />
-                  <span>info@CherryBliss.com</span>
+                  <span>health@CheryBliss.com</span>
                 </div>
               </div>
             </div>
           </div>
 
           <div className="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400">
-            <p>&copy; 2026 CherryBliss. All rights reserved. Designed from the ❤️</p>
+            <p>&copy; 2026 CheryBliss. All rights reserved. Designed from the ❤️</p>
           </div>
         </div>
       </footer>
