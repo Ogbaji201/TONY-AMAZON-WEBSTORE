@@ -239,10 +239,10 @@ export default function HomeClient({
                 Premium pharmaceutical products for your health and wellness
               </p>
               <div className="flex space-x-4">
-                <a href="#" className="text-gray-400 hover:text-white transition">Facebook</a>
-                <a href="#" className="text-gray-400 hover:text-white transition">Instagram</a>
-                <a href="#" className="text-gray-400 hover:text-white transition">Twitter</a>
-                <a href="#" className="text-gray-400 hover:text-white transition">Tiktok</a>
+                <a href="ojeka Anthony jowo" className="text-gray-400 hover:text-white transition">Facebook</a>
+                <a href="Ojeka Anthony Onyejowo" className="text-gray-400 hover:text-white transition">Instagram</a>
+                <a href="@justicemarkTon1" className="text-gray-400 hover:text-white transition">Twitter</a>
+                <a href="Kingcherrybliss" className="text-gray-400 hover:text-white transition">Tiktok</a>
               </div>
             </div>
 
@@ -251,7 +251,7 @@ export default function HomeClient({
               <ul className="space-y-2 text-gray-400">
                 <li><a href="/" className="hover:text-white transition">Home</a></li>
                 <li><a href="/products" className="hover:text-white transition">Products</a></li>
-                <li><a href="/categories" className="hover:text-white transition">Categories</a></li>
+                {/* <li><a href="/categories" className="hover:text-white transition">Categories</a></li> */}
                 <li><a href="/about" className="hover:text-white transition">About Us</a></li>
                 <li><a href="/contact" className="hover:text-white transition">Contact</a></li>
               </ul>
@@ -281,7 +281,7 @@ export default function HomeClient({
                 </div>
                 <div className="flex items-center">
                   <Mail className="w-5 h-5 mr-3" />
-                  <span>health@CheryBliss.com</span>
+                  <span>health@cheryblisshealth.com</span>
                 </div>
               </div>
             </div>
