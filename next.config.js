@@ -19,6 +19,12 @@ const nextConfig = {
       // Production Strapi (update if needed)
       {
         protocol: 'https',
+        hostname: 'res.cloudinary.com',
+        pathname: '/**',
+      },
+
+      {
+        protocol: 'https',
         hostname: 'api.cheryblisshealth.com',
         pathname: '/uploads/**',
       },

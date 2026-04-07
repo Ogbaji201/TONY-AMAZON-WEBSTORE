@@ -182,9 +182,9 @@ export default function HomeClient({
       <section className="relative">
         <SimpleCarousel
           slides={slidesToShow}
-          heightClass="h-[220px] sm:h-[280px] md:h-[340px] lg:h-[380px]"
-          fit="contain"
-          dim={false}
+          heightClass="h-[320px] sm:h-[380px] md:h-[400px] lg:h-[520px]"
+          fit="cover"
+          dim={true}
         />
       </section>
 

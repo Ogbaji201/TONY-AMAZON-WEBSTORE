@@ -58,7 +58,7 @@ export default function AboutPage() {
             <div>
               <h2 className="text-3xl font-bold text-gray-800 mb-6">Our Story</h2>
               <p className="text-gray-600 mb-4">
-                Founded in 2020, PharmaStore emerged from a simple vision: to make healthcare 
+                Founded in 2020, Cherrybliss Health emerged from a simple vision: to make healthcare 
                 accessible and convenient for everyone. What started as a small local pharmacy 
                 has grown into a trusted online healthcare destination serving thousands of 
                 customers across Nigeria.
@@ -193,7 +193,7 @@ export default function AboutPage() {
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold mb-6">Ready to Experience Better Healthcare?</h2>
           <p className="text-gray-300 mb-8 max-w-2xl mx-auto">
-            Join thousands of satisfied customers who trust PharmaStore for their healthcare needs.
+            Join thousands of satisfied customers who trust CherryBliss Health for their healthcare needs.
           </p>
           <div className="space-x-4">
             <button className="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
