@@ -196,10 +196,10 @@ export default function AboutPage() {
             Join thousands of satisfied customers who trust CherryBliss Health for their healthcare needs.
           </p>
           <div className="space-x-4">
-            <button className="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+            <button className="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors" onClick={() => window.location.href = '/products'}>
               Shop Now
             </button>
-            <button className="border border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-gray-800 transition-colors">
+            <button className="border border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-gray-800 transition-colors" onClick={() => window.location.href = '/contact'}>
               Contact Us
             </button>
           </div>
