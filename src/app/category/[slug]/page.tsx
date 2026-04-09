@@ -1,7 +1,8 @@
 import { Star, Heart } from "lucide-react";
+import Link from "next/link";
 import SafeImg from "@/components/SafeImg";
 import AddToCartButton from "@/components/AddToCartButton";
-import QuickView from "@/components/QuickView";
+import ReadMore from "@/components/ReadMore";
 
 export const dynamic = "force-dynamic";
 
@@ -18,64 +19,42 @@ function normalizeStrapiUrl(url?: string | null) {
 function blocksToText(value: any): string {
   if (!value) return "";
   if (typeof value === "string") return value;
-
-  if (Array.isArray(value)) {
-    return value
-      .map((node) => blocksToText(node))
-      .filter(Boolean)
-      .join("\n")
-      .trim();
-  }
-
+  if (Array.isArray(value))
+    return value.map((node) => blocksToText(node)).filter(Boolean).join("\n").trim();
   if (typeof value === "object") {
     if (Array.isArray(value.children)) return blocksToText(value.children);
     if (typeof value.text === "string") return value.text;
   }
-
   return "";
 }
 
 function pickMediaUrl(media: any): string {
   const formats = media?.formats;
-  return (
-    formats?.medium?.url ||
-    formats?.small?.url ||
-    formats?.thumbnail?.url ||
-    media?.url ||
-    ""
-  );
+  return formats?.medium?.url || formats?.small?.url || formats?.thumbnail?.url || media?.url || "";
 }
 
 function extractImages(field: any): { url: string }[] {
   if (!field) return [];
-
   if (Array.isArray(field)) {
-    return field
-      .map((m) => {
-        const attrs = m?.attributes ?? m;
-        const u = pickMediaUrl(attrs);
-        return u ? { url: normalizeStrapiUrl(u) } : null;
-      })
-      .filter(Boolean) as { url: string }[];
+    return field.map((m) => {
+      const attrs = m?.attributes ?? m;
+      const u = pickMediaUrl(attrs);
+      return u ? { url: normalizeStrapiUrl(u) } : null;
+    }).filter(Boolean) as { url: string }[];
   }
-
   if (field?.data) {
     const data = Array.isArray(field.data) ? field.data : [field.data];
-    return data
-      .map((m: any) => {
-        const attrs = m?.attributes ?? m;
-        const u = pickMediaUrl(attrs);
-        return u ? { url: normalizeStrapiUrl(u) } : null;
-      })
-      .filter(Boolean) as { url: string }[];
+    return data.map((m: any) => {
+      const attrs = m?.attributes ?? m;
+      const u = pickMediaUrl(attrs);
+      return u ? { url: normalizeStrapiUrl(u) } : null;
+    }).filter(Boolean) as { url: string }[];
   }
-
   const attrs = field?.attributes ?? field;
   const u = pickMediaUrl(attrs);
   return u ? [{ url: normalizeStrapiUrl(u) }] : [];
 }
 
-// ---------- types ----------
 type NormalizedProduct = {
   id: number;
   name: string;
@@ -89,37 +68,20 @@ type NormalizedProduct = {
 function normalizeProducts(items: any[]): NormalizedProduct[] {
   return (items || []).map((item: any) => {
     const a = item?.attributes ? item.attributes : item || {};
-
     const name = a.name ?? a.title ?? a.Name ?? a.Title ?? "Unnamed Product";
-
-    const descriptionRaw =
-      a.description ??
-      a.Product_description ??
-      a.Description ??
-      a.product_description ??
-      null;
-
+    const descriptionRaw = a.description ?? a.Product_description ?? a.Description ?? a.product_description ?? null;
     const description = blocksToText(descriptionRaw) || null;
-
     const rawPrice = a.price ?? a.Price ?? 0;
-    const priceNum =
-      typeof rawPrice === "string" ? parseFloat(rawPrice) : Number(rawPrice || 0);
-
+    const priceNum = typeof rawPrice === "string" ? parseFloat(rawPrice) : Number(rawPrice || 0);
     const images = extractImages(a.image ?? a.images ?? a.Image_Upload ?? null);
-
     const categoryData = a.category?.data ?? a.category ?? null;
     let category = null;
-
     if (categoryData) {
       const cat = Array.isArray(categoryData) ? categoryData[0] : categoryData;
       const catAttrs = cat?.attributes ? cat.attributes : cat || {};
       const catName = catAttrs.name ?? catAttrs.Name ?? catAttrs.title ?? "";
-      category = {
-        name: catName,
-        slug: catAttrs.slug ?? catAttrs.Slug ?? "",
-      };
+      category = { name: catName, slug: catAttrs.slug ?? catAttrs.Slug ?? "" };
     }
-
     return {
       id: item.id ?? a.id,
       name,
@@ -136,9 +98,7 @@ async function getProductsByCategorySlug(slug: string): Promise<NormalizedProduc
   const url =
     `${STRAPI}/api/products?` +
     `filters[category][slug][$eq]=${encodeURIComponent(slug)}` +
-    `&populate=*` +
-    `&pagination[pageSize]=100`;
-
+    `&populate=*&pagination[pageSize]=100`;
   try {
     const res = await fetch(url, { cache: "no-store" });
     if (!res.ok) return [];
@@ -151,11 +111,7 @@ async function getProductsByCategorySlug(slug: string): Promise<NormalizedProduc
 
 async function getCategoryName(slug?: string): Promise<string> {
   if (!slug) return "Category";
-
-  const url =
-    `${STRAPI}/api/categories?filters[slug][$eq]=${encodeURIComponent(slug)}` +
-    `&populate=*`;
-
+  const url = `${STRAPI}/api/categories?filters[slug][$eq]=${encodeURIComponent(slug)}&populate=*`;
   try {
     const res = await fetch(url, { cache: "no-store" });
     if (!res.ok) return slug.replace(/-/g, " ");
@@ -189,50 +145,116 @@ export default async function CategoryPage({
   ]);
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen" style={{ backgroundColor: "#f9fafb" }}>
       <div className="container mx-auto px-4 py-10">
-        <h1 className="text-4xl font-bold text-center mb-10">{categoryName}</h1>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-          {products.map((p) => {
-            const imageUrl = p.images?.[0]?.url ?? "";
+        {/* Page heading */}
+        <div className="text-center mb-10">
+          <h1
+            className="text-4xl font-bold mb-2 capitalize"
+            style={{ color: "#1f2937" }}
+          >
+            {categoryName}
+          </h1>
+          <p style={{ color: "#6b7280" }}>
+            {products.length} product{products.length !== 1 ? "s" : ""} in this category
+          </p>
+        </div>
 
-            return (
-              <div
-                key={p.id}
-                className="bg-white rounded-2xl shadow-md overflow-hidden flex flex-col"
-              >
-                <SafeImg
-                  src={imageUrl}
-                  alt={p.name}
-                  className="w-full h-64 object-cover"
-                />
+        {products.length === 0 ? (
+          <div className="text-center py-20" style={{ color: "#6b7280" }}>
+            No products found in this category.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            {products.map((p) => {
+              const imageUrl = p.images?.[0]?.url ?? "";
 
-                <div className="p-6 flex flex-col h-full">
-                  <h3 className="text-xl font-semibold mb-2">{p.name}</h3>
+              return (
+                <div
+                  key={p.id}
+                  className="rounded-2xl shadow-md overflow-hidden flex flex-col hover:shadow-xl transition duration-300 group"
+                  style={{ backgroundColor: "#ffffff" }}
+                >
+                  {/* ✅ Clickable image → product detail page */}
+                  <Link href={`/products/${p.id}`} className="block relative overflow-hidden">
+                    {imageUrl ? (
+                      <SafeImg
+                        src={imageUrl}
+                        alt={p.name}
+                        className="w-full h-64 object-cover group-hover:scale-105 transition duration-300"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div
+                        className="w-full h-64 flex items-center justify-center"
+                        style={{ backgroundColor: "#e5e7eb", color: "#9ca3af" }}
+                      >
+                        No image
+                      </div>
+                    )}
+                    {p.featured && (
+                      <div className="absolute top-4 left-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                        Featured
+                      </div>
+                    )}
+                  </Link>
 
-                  <p className="text-sm text-gray-600 mb-4 line-clamp-3">
-                    {p.description || "No description available."}
-                  </p>
+                  {/* Wishlist button outside Link */}
+                  <div className="relative -mt-10 mr-4 flex justify-end z-10">
+                    <button
+                      className="bg-white rounded-full p-2 shadow-md hover:bg-red-500 hover:text-white transition duration-300"
+                      aria-label="Add to favourites"
+                    >
+                      <Heart className="w-4 h-4" />
+                    </button>
+                  </div>
 
-                  <span className="text-2xl font-bold text-green-600 mb-4">
-                    ₦{Number(p.price).toLocaleString()}
-                  </span>
+                  <div className="p-6 flex flex-col h-full">
+                    {/* Stars */}
+                    <div className="flex text-yellow-400 mb-2">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} className="w-4 h-4 fill-current" />
+                      ))}
+                    </div>
 
-                  <div className="mt-auto">
-                    <AddToCartButton
-                      id={p.id}
-                      name={p.name}
-                      price={p.price}
-                      image={imageUrl}
-                      className={cartBtnClass}
-                    />
+                    {/* ✅ Product name links to detail page */}
+                    <Link href={`/products/${p.id}`}>
+                      <h3
+                        className="text-xl font-semibold mb-2 line-clamp-2 min-h-[56px] hover:text-blue-600 transition"
+                        style={{ color: "#1f2937" }}
+                      >
+                        {p.name}
+                      </h3>
+                    </Link>
+
+                    {/* ✅ ReadMore component — works on all pages now */}
+                    <div className="mb-4">
+                      <ReadMore text={p.description || "No description available."} clamp={3} />
+                    </div>
+
+                    <span
+                      className="text-2xl font-bold mb-4"
+                      style={{ color: "#16a34a" }}
+                    >
+                      ₦{Number(p.price).toLocaleString()}
+                    </span>
+
+                    <div className="mt-auto">
+                      <AddToCartButton
+                        id={p.id}
+                        name={p.name}
+                        price={p.price}
+                        image={imageUrl}
+                        className={cartBtnClass}
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );
