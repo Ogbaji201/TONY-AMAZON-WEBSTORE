@@ -1,4 +1,3 @@
-
 import './globals.css';
 import Providers from './providers';
 import Script from 'next/script';
@@ -9,6 +8,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body>
         <Providers>{children}</Providers>
+
+        {/* Vercel Analytics - tracks page views and visitors */}
+        <Analytics />
 
         {/* Load Zapier Web Component Script */}
         <Script

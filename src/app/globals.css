@@ -1,59 +1,12 @@
-/* 
-@import "tailwindcss";
-
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-/* ✅ FIXED: was #8f8989 (grey) — invisible on white/light backgrounds on mobile dark mode */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ffffff;
-  }
-} */
-
-/* body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
-}
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-.line-clamp-2 {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-} */
-
-/* .line-clamp-3 {
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-} */
-
 @import "tailwindcss";
 
 :root {
   /* Light mode colors - HIGH CONTRAST */
   --background: #ffffff;
-  --foreground: #111111; /* Changed from #171717 to even darker for mobile */
-  --foreground-muted: #333333; /* For secondary text */
-  --header-bg: #fce4ec; /* Your pink header background */
-  --header-text: #1a1a1a; /* Dark text for header */
+  --foreground: #111111;
+  --foreground-muted: #333333;
+  --header-bg: #fce4ec;
+  --header-text: #1a1a1a;
 }
 
 @theme inline {
@@ -67,10 +20,10 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
-    --foreground: #f0f0f0; /* Bright off-white, not gray */
-    --foreground-muted: #d0d0d0; /* Light gray for secondary text */
-    --header-bg: #1a1a1a; /* Dark header for dark mode */
-    --header-text: #f0f0f0; /* White text for dark header */
+    --foreground: #f0f0f0;
+    --foreground-muted: #d0d0d0;
+    --header-bg: #1a1a1a;
+    --header-text: #f0f0f0;
   }
 }
 
@@ -79,7 +32,7 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
-  -webkit-font-smoothing: antialiased; /* Better font rendering on mobile */
+  -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
@@ -90,7 +43,7 @@ body {
 /* Tablet and mobile devices */
 @media (max-width: 768px) {
   body {
-    color: #000000 !important; /* Pure black on light mode for mobile */
+    color: #000000 !important;
     font-weight: 400;
   }
   
@@ -128,7 +81,7 @@ body {
   [class*="text-gray-3"],
   [class*="text-gray-4"],
   [class*="text-gray-5"] {
-    color: #1f2937 !important; /* Dark gray - forces readability */
+    color: #1f2937 !important;
   }
   
   /* Make secondary text readable */
@@ -178,7 +131,7 @@ body {
 
 @media (prefers-color-scheme: dark) and (max-width: 768px) {
   body {
-    color: #ffffff !important; /* Pure white on dark mode for mobile */
+    color: #ffffff !important;
   }
   
   :root {
@@ -208,7 +161,7 @@ body {
   [class*="text-gray-3"],
   [class*="text-gray-4"],
   [class*="text-gray-5"] {
-    color: #e5e7eb !important; /* Light gray for dark mode */
+    color: #e5e7eb !important;
   }
   
   .cart-text,
@@ -250,12 +203,12 @@ body {
   
   /* Laptop can handle slightly subtler colors */
   .text-gray-500 {
-    color: #6b7280; /* Keep Tailwind default on laptop */
+    color: #6b7280;
   }
   
   /* But still ensure readability */
   .text-gray-400 {
-    color: #4b5563; /* Darker than default for safety */
+    color: #4b5563;
   }
   
   /* Header on laptop */
@@ -267,7 +220,7 @@ body {
 }
 
 /* ============================================ */
-/* UTILITY CLASSES (keep your existing ones) */
+/* UTILITY CLASSES */
 /* ============================================ */
 
 .line-clamp-2 {
@@ -290,20 +243,20 @@ body {
 
 /* Force high contrast on all text by default */
 p, span, div, h1, h2, h3, h4, h5, h6, li, a {
-  color: inherit; /* Inherit from body */
+  color: inherit;
 }
 
 /* Specifically for light backgrounds (like your pink header) */
 .bg-pink-100,
 .bg-pink-50,
 [class*="bg-pink-"] {
-  color: #1a1a1a !important; /* Dark text on pink backgrounds */
+  color: #1a1a1a !important;
 }
 
 /* For white backgrounds (checkout page) */
 .bg-white,
 [class*="bg-white"] {
-  color: #111111 !important; /* Almost black on white */
+  color: #111111 !important;
 }
 
 /* Ensure form inputs have readable text */
@@ -327,5 +280,5 @@ select {
 /* Remove any opacity that might be causing faint text */
 [style*="opacity"],
 [class*="opacity"] {
-  opacity: 1 !important; /* Force full opacity on mobile */
+  opacity: 1 !important;
 }
