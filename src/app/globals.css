@@ -1,12 +1,10 @@
 @import "tailwindcss";
 
 :root {
-  /* Light mode colors - HIGH CONTRAST */
   --background: #ffffff;
-  --foreground: #111111;
-  --foreground-muted: #333333;
-  --header-bg: #fce4ec;
-  --header-text: #1a1a1a;
+  --foreground: #171717;
+  /* Force light mode — stops iOS/Android dark mode from inverting colors */
+  color-scheme: light only;
 }
 
 @theme inline {
@@ -16,212 +14,16 @@
   --font-mono: var(--font-geist-mono);
 }
 
-/* Dark mode - MAXIMUM CONTRAST for mobile readability */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #f0f0f0;
-    --foreground-muted: #d0d0d0;
-    --header-bg: #1a1a1a;
-    --header-text: #f0f0f0;
-  }
-}
 
-/* Base body styles */
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: #ffffff;
+  color: #171717;
   font-family: Arial, Helvetica, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
-/* ============================================ */
-/* MOBILE-SPECIFIC CONTRAST ENHANCEMENTS */
-/* ============================================ */
-
-/* Tablet and mobile devices */
-@media (max-width: 768px) {
-  body {
-    color: #000000 !important;
-    font-weight: 400;
-  }
-  
-  /* Force all text to be darker on mobile light mode */
-  :root {
-    --foreground: #000000;
-    --foreground-muted: #222222;
-  }
-  
-  /* Header specific fixes for mobile */
-  header,
-  nav,
-  .header,
-  .navbar {
-    color: #000000 !important;
-  }
-  
-  /* Make all text within header/nav darker */
-  header *,
-  nav *,
-  .header *,
-  .navbar * {
-    color: #000000 !important;
-  }
-  
-  /* Specifically target Tailwind's lighter text colors */
-  .text-gray-300,
-  .text-gray-400,
-  .text-gray-500,
-  .text-gray-600,
-  .text-pink-100,
-  .text-pink-200,
-  .text-pink-300,
-  .text-pink-400,
-  [class*="text-gray-3"],
-  [class*="text-gray-4"],
-  [class*="text-gray-5"] {
-    color: #1f2937 !important;
-  }
-  
-  /* Make secondary text readable */
-  .text-muted,
-  .text-secondary,
-  .caption {
-    color: #333333 !important;
-    font-weight: 500;
-  }
-  
-  /* Checkout/Cart page specific fixes */
-  .cart-text,
-  .checkout-text,
-  [class*="Shopping"],
-  [class*="Checkout"],
-  [class*="Cart"] {
-    color: #000000 !important;
-    font-weight: 600 !important;
-  }
-  
-  /* Price text needs to be very clear */
-  [class*="Price"],
-  [class*="price"],
-  .amount {
-    color: #000000 !important;
-    font-weight: 700 !important;
-  }
-  
-  /* Button text should be crisp */
-  button,
-  .button,
-  [role="button"] {
-    color: #000000 !important;
-    font-weight: 600 !important;
-  }
-  
-  /* Link text */
-  a {
-    color: #1a1a1a !important;
-    font-weight: 500;
-  }
-}
-
-/* ============================================ */
-/* DARK MODE MOBILE ENHANCEMENTS */
-/* ============================================ */
-
-@media (prefers-color-scheme: dark) and (max-width: 768px) {
-  body {
-    color: #ffffff !important;
-  }
-  
-  :root {
-    --foreground: #ffffff;
-    --foreground-muted: #e0e0e0;
-  }
-  
-  header,
-  nav,
-  .header,
-  .navbar {
-    color: #ffffff !important;
-  }
-  
-  header *,
-  nav *,
-  .header *,
-  .navbar * {
-    color: #ffffff !important;
-  }
-  
-  /* Lighten text in dark mode */
-  .text-gray-300,
-  .text-gray-400,
-  .text-gray-500,
-  .text-gray-600,
-  [class*="text-gray-3"],
-  [class*="text-gray-4"],
-  [class*="text-gray-5"] {
-    color: #e5e7eb !important;
-  }
-  
-  .cart-text,
-  .checkout-text,
-  [class*="Shopping"],
-  [class*="Checkout"],
-  [class*="Cart"] {
-    color: #ffffff !important;
-    font-weight: 600 !important;
-  }
-  
-  [class*="Price"],
-  [class*="price"],
-  .amount {
-    color: #ffffff !important;
-    font-weight: 700 !important;
-  }
-  
-  button,
-  .button,
-  [role="button"] {
-    color: #ffffff !important;
-  }
-  
-  a {
-    color: #f0f0f0 !important;
-  }
-}
-
-/* ============================================ */
-/* LAPTOP/DESKTOP OPTIMIZATIONS */
-/* ============================================ */
-
-@media (min-width: 769px) {
-  body {
-    color: var(--foreground);
-    font-weight: 400;
-  }
-  
-  /* Laptop can handle slightly subtler colors */
-  .text-gray-500 {
-    color: #6b7280;
-  }
-  
-  /* But still ensure readability */
-  .text-gray-400 {
-    color: #4b5563;
-  }
-  
-  /* Header on laptop */
-  header,
-  nav,
-  .header {
-    color: var(--header-text);
-  }
-}
-
-/* ============================================ */
-/* UTILITY CLASSES */
-/* ============================================ */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 .line-clamp-2 {
   display: -webkit-box;
@@ -237,48 +39,9 @@ body {
   overflow: hidden;
 }
 
-/* ============================================ */
-/* ADDITIONAL CONTRAST HELPERS */
-/* ============================================ */
-
-/* Force high contrast on all text by default */
-p, span, div, h1, h2, h3, h4, h5, h6, li, a {
-  color: inherit;
-}
-
-/* Specifically for light backgrounds (like your pink header) */
-.bg-pink-100,
-.bg-pink-50,
-[class*="bg-pink-"] {
-  color: #1a1a1a !important;
-}
-
-/* For white backgrounds (checkout page) */
-.bg-white,
-[class*="bg-white"] {
-  color: #111111 !important;
-}
-
-/* Ensure form inputs have readable text */
-input,
-textarea,
-select {
-  color: #111111 !important;
-  background-color: #ffffff !important;
-}
-
-/* Dark mode form inputs */
-@media (prefers-color-scheme: dark) {
-  input,
-  textarea,
-  select {
-    color: #ffffff !important;
-    background-color: #1a1a1a !important;
-  }
-}
-
-/* Remove any opacity that might be causing faint text */
-[style*="opacity"],
-[class*="opacity"] {
-  opacity: 1 !important;
+.line-clamp-4 {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
